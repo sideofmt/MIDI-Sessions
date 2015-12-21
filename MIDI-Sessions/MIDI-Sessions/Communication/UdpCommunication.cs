@@ -11,13 +11,21 @@ namespace MIDI_Sessions.Communication
 {
     class UdpCommunication
     {
-        public async void ListenMessage()
+        IPEndPoint local;
+        IPEndPoint remote;
+        UdpClient client;
+
+        public async void setUpServer()
         {
             // 接続ソケットの準備
-            var local = new IPEndPoint(IPAddress.Any, 8000);
-            var remote = new IPEndPoint(IPAddress.Any, 8000);
-            var client = new UdpClient(local);
+            local = new IPEndPoint(IPAddress.Any, 8000);
+            remote = new IPEndPoint(IPAddress.Any, 8000);
+            client = new UdpClient(local);
+        }
 
+
+        public async void OpenServer()
+        {
             while (true)
             {
                 // データ受信待機
@@ -34,13 +42,18 @@ namespace MIDI_Sessions.Communication
         private void OnRecieve(string data)
         {
             // 受信したときの処理
+            Console.WriteLine(data);
         }
+
+
+
+
 
         public async void SendMessage()
         {
             // 宛先の作成
             var remote = new IPEndPoint(
-                                IPAddress.Parse("192.168.0.10"),
+                                IPAddress.Parse("localhost"),
                                 8000);
 
             // メッセージの準備
@@ -52,8 +65,6 @@ namespace MIDI_Sessions.Communication
             await client.SendAsync(message, message.Length);
             client.Close();
         }
-
-
 
     }
 }
