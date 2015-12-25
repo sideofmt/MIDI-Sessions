@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Midi;
 
 namespace MIDI_Sessions
 {
@@ -15,6 +16,14 @@ namespace MIDI_Sessions
         public Form1()
         {
             InitializeComponent();
+        }
+
+        private void C_Click(object sender, EventArgs e) {
+
+        }
+
+        private void D_Click(object sender, EventArgs e) {
+            Console.WriteLine("Hello World!");
         }
     }
 }

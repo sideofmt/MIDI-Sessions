@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Midi;
 
-namespace MIDI_Sessions{
+namespace MIDI_Sessions.MIDI{
     class MIDIData{
         private Channel cha;
         private Pitch pit;
