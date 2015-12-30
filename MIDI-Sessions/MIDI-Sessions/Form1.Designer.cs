@@ -30,6 +30,7 @@
         {
             this.C = new System.Windows.Forms.Button();
             this.D = new System.Windows.Forms.Button();
+            this.PlayMidi = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // C
@@ -52,13 +53,25 @@
             this.D.UseVisualStyleBackColor = true;
             this.D.Click += new System.EventHandler(this.D_Click);
             // 
+            // PlayMidi
+            // 
+            this.PlayMidi.Location = new System.Drawing.Point(13, 72);
+            this.PlayMidi.Name = "PlayMidi";
+            this.PlayMidi.Size = new System.Drawing.Size(75, 23);
+            this.PlayMidi.TabIndex = 2;
+            this.PlayMidi.Text = "PlayMidi";
+            this.PlayMidi.UseVisualStyleBackColor = true;
+            this.PlayMidi.Click += new System.EventHandler(this.PlayMidi_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Controls.Add(this.PlayMidi);
             this.Controls.Add(this.D);
             this.Controls.Add(this.C);
+            this.KeyPreview = true;
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -69,6 +82,7 @@
 
         private System.Windows.Forms.Button C;
         private System.Windows.Forms.Button D;
+        private System.Windows.Forms.Button PlayMidi;
     }
 }
 

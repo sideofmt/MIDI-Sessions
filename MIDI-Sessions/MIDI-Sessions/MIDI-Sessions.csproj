@@ -62,8 +62,10 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="MIDI\PlayMidi.cs" />
     <Compile Include="MIDI\MIDIData.cs" />
+    <Compile Include="MIDI\IPlayMidi.cs" />
+    <Compile Include="MIDI\PlayMidi.cs" />
+    <Compile Include="MIDI\SessionUtil.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
