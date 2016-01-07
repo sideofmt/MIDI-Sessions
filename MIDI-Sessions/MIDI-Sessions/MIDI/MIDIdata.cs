@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Midi;
 
 namespace MIDI_Sessions.MIDI{
@@ -43,6 +44,6 @@ namespace MIDI_Sessions.MIDI{
             get { return this.isPushing; }
         }
 
-        /**-------------- 以上 -------------**/
+        //End MIDIData
     }
 }

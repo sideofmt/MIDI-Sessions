@@ -9,16 +9,17 @@ using Midi;
 namespace MIDI_Sessions.MIDI {
     class PlayMidi : IPlayMidi {
         private MIDIData midiData;          //MIDIData。
-        private string midiFile;            //
+        private string midiFile;            //MidiFile。
         private bool isMidiData = false;    /*オブジェクト生成時にコンストラクタに渡されたデータが、
                                              *MIDIDataかMidiファイルかを判断。
                                              *MIDIDataである場合はTrue。 
                                              */
-        private OutputDevice outputDevice;  //Midiを再生する際に使用?
+        private OutputDevice outputDevice;  //アウトプットデバイス。Midiを再生する際に使用。
         
         /*--引数がMIDIDataの場合のコンストラクタ--*/
-        public PlayMidi(MIDIData midiData) {
+        public PlayMidi(MIDIData midiData, OutputDevice outputDevice){
             this.midiData = midiData;
+            this.outputDevice = outputDevice;
             isMidiData = true;
         }
 
@@ -35,19 +36,31 @@ namespace MIDI_Sessions.MIDI {
             return;
         }
 
+        /*--Midiの停止--*/
+        public void Stop() {
+            if (isMidiData) stopMIDIData();
+            else stopMidiFile();
+            return;
+        }
+
+        /*--MIDIFileの停止--*/
+        public void stopMidiFile() {
+
+        }
+
+        /*--MidiDataの停止--*/
+        public void stopMIDIData() {
+            Console.WriteLine(midiData.Cha);
+            Console.WriteLine(midiData.Pit);
+            Console.WriteLine(midiData.Velocity);
+            outputDevice.SendNoteOff(midiData.Cha, midiData.Pit, midiData.Velocity);
+
+            return;
+        }
+
         /*--MIDIDataの再生--*/
         public void playMIDIData() {
-            outputDevice = SessionUtil.ChooseOutpuDevice();
-            if (outputDevice == null) {
-                return;
-            }
-            outputDevice.Open();
             outputDevice.SendNoteOn(midiData.Cha, midiData.Pit, midiData.Velocity);
-            while (true) {
-                if (!midiData.IsPushing) break;
-            }
-            outputDevice.SendNoteOff(midiData.Cha, midiData.Pit, midiData.Velocity);
-            outputDevice.Close();
 
             return;
         }
@@ -56,6 +69,8 @@ namespace MIDI_Sessions.MIDI {
         public void playMidiFile() {
 
             return;
-        } 
+        }
+
+        //End PlayMidi
     }
 }

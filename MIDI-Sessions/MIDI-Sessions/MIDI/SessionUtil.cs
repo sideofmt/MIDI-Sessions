@@ -6,26 +6,25 @@ using System.Threading.Tasks;
 using Midi;
 
 namespace MIDI_Sessions.MIDI {
+    //様々な処理を行うクラス。便利屋。
     class SessionUtil {
+        //使用するOutputDeviceを決定するためのメソッド。
+        //OutputDeviceが複数個あった時の処理は未実装。
         public static OutputDevice ChooseOutpuDevice(){
-            if (OutputDevice.InstalledDevices.Count == 0) {
-                return null;
-            }
             if (OutputDevice.InstalledDevices.Count == 1) {
                 return OutputDevice.InstalledDevices[0];
+            } else {
+                return null;
             }
-            Console.WriteLine("Output Devices:");
-            for (int i = 0; i < OutputDevice.InstalledDevices.Count; ++i) {
-                Console.WriteLine("   {0}: {1}", i, OutputDevice.InstalledDevices[i].Name);
+            /*
+            if (OutputDevice.InstalledDevices.Count == 0) {
+                return null;
+            }else if (OutputDevice.InstalledDevices.Count == 1) {
+                return OutputDevice.InstalledDevices[0];
             }
-            Console.Write("Choose the id of an output device...");
-            while (true) {
-                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-                int deviceId = (int)keyInfo.Key - (int)ConsoleKey.D0;
-                if (deviceId >= 0 && deviceId < OutputDevice.InstalledDevices.Count) {
-                    return OutputDevice.InstalledDevices[deviceId];
-                }
-            }
+            */
         }
+
+        //End SessionUtil
     }
 }

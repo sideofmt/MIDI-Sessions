@@ -8,8 +8,9 @@ namespace MIDI_Sessions.MIDI {
     interface IPlayMidi {
         //MidiData及びMidiファイルを再生するインタフェース。
 
-        void Run(); //Midiの再生。
+        void Run();  //Midiの再生。
+        void Stop(); //Midiの停止
 
-        /**-------------- 以上 -------------**/
+        //End IPlayMidi
     }
 }
