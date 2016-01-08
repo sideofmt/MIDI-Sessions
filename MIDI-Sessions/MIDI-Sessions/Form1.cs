@@ -26,10 +26,13 @@ namespace MIDI_Sessions{
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.KeyUp += new KeyEventHandler(Form1_KeyUp);
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);     //終了する際に処理をこなうために実装。
+            this.VelocityBar.MouseUp += new MouseEventHandler(VelocityBar_MouseUp);
             cha = Channel.Channel1;                     //Midiチャンネルの割り当て。
             velocity = 100;                             //velocityの初期値は100。
+            this.VelocityBar.Value = velocity;
             openDevice();                               //outputDeviceをOpenさせる。 
-            soundKey = new Dictionary<Keys,MIDIData>();
+            soundKey = new Dictionary<Keys, MIDIData>();
+            VelocityLabel2.Update();
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
             qwertyKey = new Keys[] { Keys.A, Keys.W, Keys.S, Keys.E, Keys.D, Keys.F, Keys.T, Keys.G, Keys.Y, Keys.H, Keys.U, Keys.J, Keys.K };
@@ -86,6 +89,9 @@ namespace MIDI_Sessions{
                 play.Stop();    //音の停止。
             }else{
                 /* 方向キーの左右どちらかが離された場合の処理 */
+                for (int i = 0; i < qwertyKey.Length;i++ ) {
+                    if (soundKey[qwertyKey[i]].IsPushing) return;
+                }
                 switch (e.KeyCode) {
                     case Keys.Right:
                         /* 右の場合 */
@@ -110,6 +116,17 @@ namespace MIDI_Sessions{
 
         private void PlayMidi_Click(object sender, EventArgs e) {
 
+        }
+
+        private void VelocityBar_Scroll(object sender, EventArgs e) {
+            velocity = VelocityBar.Value;
+            this.VelocityLabel2.Text = velocity.ToString();
+        }
+
+        private void VelocityBar_MouseUp(object sender, EventArgs e) {
+            for (int i = 0; i < qwertyKey.Length; i++) {
+                soundKey[qwertyKey[i]].Velocity = velocity;
+            }
         }
 
         //End Form1
