@@ -1,70 +1,167 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
-
-using System.Net;
-using System.Net.Sockets;
+using System.Windows.Forms;
 
 namespace MIDI_Sessions.Communication
 {
     class UdpCommunication
     {
-        IPEndPoint local;
-        IPEndPoint remote;
-        UdpClient client;
 
-        public async void setUpServer()
+        private System.Net.Sockets.UdpClient udpClient = null;
+
+        string ipString = "127.0.0.1";
+        public int sendPort { set; get; }
+        public int recievePort { set; get; }
+
+        public MIDIdata midiData { set; get; }
+
+        public void setReciever(ref MIDIdata mididata)
         {
-            // 接続ソケットの準備
-            local = new IPEndPoint(IPAddress.Any, 8000);
-            remote = new IPEndPoint(IPAddress.Any, 8000);
-            client = new UdpClient(local);
+            this.midiData = mididata;
+        }
+
+        //Button1のClickイベントハンドラ
+        //データ受信の待機を開始する
+        public void open()
+        {
+            if (udpClient != null)
+            {
+                return;
+            }
+
+            //UdpClientを作成し、指定したポート番号にバインドする
+            System.Net.IPEndPoint localEP = new System.Net.IPEndPoint(
+                System.Net.IPAddress.Any, recievePort);
+            udpClient = new System.Net.Sockets.UdpClient(localEP);
+            //非同期的なデータ受信を開始する
+            udpClient.BeginReceive(ReceiveCallback, udpClient);
+        }
+
+        //データを受信した時
+        private void ReceiveCallback(IAsyncResult ar)
+        {
+            System.Net.Sockets.UdpClient udp =
+                (System.Net.Sockets.UdpClient)ar.AsyncState;
+
+            //非同期受信を終了する
+            System.Net.IPEndPoint remoteEP = null;
+            byte[] rcvBytes;
+            try
+            {
+                rcvBytes = udp.EndReceive(ar, ref remoteEP);
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                Console.WriteLine("受信エラー({0}/{1})",
+                    ex.Message, ex.ErrorCode);
+                return;
+            }
+            catch (ObjectDisposedException ex)
+            {
+                //すでに閉じている時は終了
+                Console.WriteLine("Socketは閉じられています。");
+                return;
+            }
+
+
+            midiData = (MIDIdata)ByteArrayToObject(rcvBytes);
+
+            //データを文字列に変換する
+            //string rcvMsg = System.Text.Encoding.UTF8.GetString(rcvBytes);
+
+            //再びデータ受信を開始する
+            udp.BeginReceive(ReceiveCallback, udp);
+        }
+
+        //RichTextBox1にメッセージを表示する
+        public MIDIdata getRecieveMessege()
+        {
+            return midiData;
         }
 
 
-        public async void OpenServer()
+
+        //Button2のClickイベントハンドラ
+        //データを送信する
+        public void send(MIDIdata data)
         {
-            while (true)
+            //送信するデータを作成する
+            byte[] sendBytes = ToByteArray(data);
+
+            //UdpClientを作成する
+            if (udpClient == null)
             {
-                // データ受信待機
-                var result = await client.ReceiveAsync();
+                udpClient = new System.Net.Sockets.UdpClient();
+            }
 
-                // 受信したデータを変換
-                var data = Encoding.UTF8.GetString(result.Buffer);
+            //非同期的にデータを送信する
+            udpClient.BeginSend(sendBytes, sendBytes.Length,
+                ipString, sendPort,
+                SendCallback, udpClient);
+        }
 
-                // Receive イベント を実行
-                this.OnRecieve(data);
+        //データを送信した時
+        private void SendCallback(IAsyncResult ar)
+        {
+            System.Net.Sockets.UdpClient udp =
+                (System.Net.Sockets.UdpClient)ar.AsyncState;
+
+            //非同期送信を終了する
+            try
+            {
+                udp.EndSend(ar);
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                Console.WriteLine("送信エラー({0}/{1})",
+                    ex.Message, ex.ErrorCode);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                //すでに閉じている時は終了
+                Console.WriteLine("Socketは閉じられています。");
             }
         }
 
-        private void OnRecieve(string data)
+        //フォームのFormClosedイベントハンドラ
+        public void close()
         {
-            // 受信したときの処理
-            Console.WriteLine(data);
+            //UdpClientを閉じる
+            if (udpClient != null)
+            {
+                udpClient.Close();
+            }
+        }
+
+
+        public static byte[] ToByteArray(object source)
+        {         
+            var formatter = new BinaryFormatter();
+            using (var stream = new MemoryStream())
+            {
+                formatter.Serialize(stream, source);
+                return stream.ToArray();
+            }
+        }
+        public static Object ByteArrayToObject(byte[] arrBytes)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
+                memStream.Write(arrBytes, 0, arrBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var obj = binForm.Deserialize(memStream);
+                return obj;
+            }
         }
 
 
 
-
-
-        public async void SendMessage()
-        {
-            // 宛先の作成
-            var remote = new IPEndPoint(
-                                IPAddress.Parse("localhost"),
-                                8000);
-
-            // メッセージの準備
-            var message = Encoding.UTF8.GetBytes("Hello world !");
-
-            // UDPでメッセージ送信
-            var client = new UdpClient(8000);
-            client.Connect(remote);
-            await client.SendAsync(message, message.Length);
-            client.Close();
-        }
 
     }
 }

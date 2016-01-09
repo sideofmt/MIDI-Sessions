@@ -6,17 +6,11 @@ using System.Threading.Tasks;
 
 namespace MIDI_Sessions
 {
+    [Serializable()]    // 送るデータにはこれを必ず書く
     class MIDIdata
     {
 
-
-
-
-
-
-
-
-
+        public string str { set; get; }
 
 
     }
