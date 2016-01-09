@@ -85,20 +85,19 @@ namespace MIDI_Sessions{
         /// </summary>
         /// <param name="midiData"></param>
         private void playMidi() {
-            foreach (MIDIData midi in BePlayedMidiData) {
-                if (midi.IsPushing) 
-                {
-                    play = new PlayMidi(midi, outputDevice);
-                    play.Run();
-                } 
-                else 
-                {
-                    play = new PlayMidi(midi, outputDevice);
-                    play.Stop();
+            lock (BePlayedMidiData) {
+                foreach (MIDIData midi in BePlayedMidiData) {
+                    //i++;
+                    if (midi.IsPushing) {
+                        play = new PlayMidi(midi, outputDevice);
+                        play.Run();
+                    } else {
+                        play = new PlayMidi(midi, outputDevice);
+                        play.Stop();
+                    }
                 }
+                BePlayedMidiData.Clear();
             }
-            BePlayedMidiData.Clear();
-
             return;
         }
 
@@ -373,7 +372,7 @@ namespace MIDI_Sessions{
         private void startConnection() {
             // 使用ポートの設定
             sendPort = 8000;
-            recievePort = 8001;
+            recievePort = 8000;
 
             int performedAppNum = 1;
             //if ((performedAppNum = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName).Length) > 1) {
@@ -407,7 +406,9 @@ namespace MIDI_Sessions{
         /// <param name="mididata"></param>
         void BaseAdapter.recievedProcess(MIDIData mididata) {
             Console.WriteLine("recievedProcessが呼ばれました");
-            this.BePlayedMidiData.Add(mididata);
+            lock (BePlayedMidiData) {
+                this.BePlayedMidiData.Add(mididata);
+            }
         }
 
         /// <summary>
@@ -423,15 +424,12 @@ namespace MIDI_Sessions{
                     isConnect = false;
                     return;
                 }
-                if (sendMidiData == null) {
-                    //Console.WriteLine("送信するMIDIDataがありません");
-                    return;
+                if (sendMidiData != null) {
+                    udp.send(sendMidiData);
+                    sendMidiData = null;
+                    Console.WriteLine("MIDIデータを送信しました");
                 }
-                udp.send(sendMidiData);
-                sendMidiData = null;
-                Console.WriteLine("MIDIデータを送信しました");
             }
-
             // MIDIデータの演奏
             playMidi();
         }

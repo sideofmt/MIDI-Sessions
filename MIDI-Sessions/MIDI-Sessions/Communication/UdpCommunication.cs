@@ -62,7 +62,7 @@ namespace MIDI_Sessions.Communication {
                 (UdpClient)ar.AsyncState;
 
             //非同期受信を終了する
-            IPEndPoint remoteEP = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 0);
+            IPEndPoint remoteEP = null;
             byte[] rcvBytes;
             try {
                 rcvBytes = udp.EndReceive(ar, ref remoteEP);
