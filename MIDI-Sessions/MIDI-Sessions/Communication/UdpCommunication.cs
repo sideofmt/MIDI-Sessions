@@ -6,6 +6,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Net.Sockets;
+using System.Net;
 using MIDI_Sessions.MIDI;
 
 namespace MIDI_Sessions.Communication {
@@ -55,17 +57,19 @@ namespace MIDI_Sessions.Communication {
 
         //データを受信した時
         private void ReceiveCallback(IAsyncResult ar) {
-            System.Net.Sockets.UdpClient udp =
-                (System.Net.Sockets.UdpClient)ar.AsyncState;
+            Console.WriteLine("データを受信しました");
+            UdpClient udp =
+                (UdpClient)ar.AsyncState;
 
             //非同期受信を終了する
-            System.Net.IPEndPoint remoteEP = null;
+            IPEndPoint remoteEP = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 0);
             byte[] rcvBytes;
             try {
                 rcvBytes = udp.EndReceive(ar, ref remoteEP);
             } catch (System.Net.Sockets.SocketException ex) {
                 Console.WriteLine("受信エラー({0}/{1})",
                     ex.Message, ex.ErrorCode);
+                udp.BeginReceive(ReceiveCallback, udp);
                 return;
             } catch (ObjectDisposedException ex) {
                 //すでに閉じている時は終了
@@ -165,5 +169,10 @@ namespace MIDI_Sessions.Communication {
             }
         }
 
+    }
+
+    public class UdpState {
+        public UdpClient u;
+        public IPEndPoint e;
     }
 }

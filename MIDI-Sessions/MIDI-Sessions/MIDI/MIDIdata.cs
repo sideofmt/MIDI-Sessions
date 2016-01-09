@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using Midi;
 
 namespace MIDI_Sessions.MIDI{
+    [Serializable()]    
     class MIDIData{
         //演奏している際に他ユーザに送るMidiのデータを含むクラス。
 

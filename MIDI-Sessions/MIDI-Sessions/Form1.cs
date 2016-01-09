@@ -312,6 +312,8 @@ namespace MIDI_Sessions{
             this.number3.Clear();
             this.number4.Clear();
 
+            startConnection();
+
             return;
         }
 
@@ -323,6 +325,8 @@ namespace MIDI_Sessions{
         private void ConnectLocalhost_Click(object sender, EventArgs e) {
             IPv4 = "localhost";
             Console.WriteLine(IPv4);
+
+            startConnection();
 
             return;
         }
@@ -345,7 +349,13 @@ namespace MIDI_Sessions{
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void DisconnectButton_Click(object sender, EventArgs e) {
+            if (MessageBox.Show("通信を終了しますか？", "通信の終了", MessageBoxButtons.OKCancel) == DialogResult.Cancel) {
+                // Cancelが押された時
+                return;
+            }
 
+            endConnection();
+            MessageBox.Show("通信を終了しました。", "通知", MessageBoxButtons.OK);
         }
 
         // -------------------------------------
@@ -365,19 +375,30 @@ namespace MIDI_Sessions{
             sendPort = 8000;
             recievePort = 8001;
 
+            int performedAppNum = 1;
+            //if ((performedAppNum = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName).Length) > 1) {
+            //    // 同じアプリが既に起動している場合
+            //    sendPort += (performedAppNum - 1) * 2;
+            //    recievePort += (performedAppNum - 1) * 2;
+            //    return;
+            //}
+
             // MIDIDataをnullに
             sendMidiData = null;
-            BePlayedMidiData.Clear();
 
             udp = new UdpCommunication(this, IPv4, sendPort, recievePort);
 
             // UPD通信を開始
+            Console.WriteLine("通信を開始します");
             udp.open();
+            isConnect = true;
 
-            // Timerを開始
-            timer1.Enabled = true;
-            //backgroundWorker1.RunWorkerAsync();
+        }
 
+        private void endConnection() {
+            Console.WriteLine("通信を終了します");
+            udp.close();
+            isConnect = false;
         }
 
         /// <summary>
@@ -385,6 +406,7 @@ namespace MIDI_Sessions{
         /// </summary>
         /// <param name="mididata"></param>
         void BaseAdapter.recievedProcess(MIDIData mididata) {
+            Console.WriteLine("recievedProcessが呼ばれました");
             this.BePlayedMidiData.Add(mididata);
         }
 
@@ -398,19 +420,20 @@ namespace MIDI_Sessions{
                 if (udp == null) {
                     MessageBox.Show("通信を行えません。", "エラー", MessageBoxButtons.OK);
                     // Timerを終了
-                    timer1.Enabled = false;
+                    isConnect = false;
                     return;
                 }
                 if (sendMidiData == null) {
-                    Console.WriteLine("送信するMIDIDataがありません");
+                    //Console.WriteLine("送信するMIDIDataがありません");
                     return;
                 }
                 udp.send(sendMidiData);
                 sendMidiData = null;
+                Console.WriteLine("MIDIデータを送信しました");
             }
-            playMidi();
-            //stopMidi();
 
+            // MIDIデータの演奏
+            playMidi();
         }
 
         //End Form1

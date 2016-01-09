@@ -59,12 +59,9 @@ namespace MIDI_Sessions.MIDI {
 
         /*--MIDIDataの再生--*/
         public void playMIDIData() {
-            if(midiData.PreInst != midiData.Inst){
+            if (midiData.PreInst != midiData.Inst) {
                 prog.SendNow();
             }
-            Console.WriteLine(midiData.Now[0]);
-            Console.WriteLine(midiData.Now[1]);
-            Console.WriteLine(midiData.Now[2]);
             outputDevice.SendNoteOn(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;
