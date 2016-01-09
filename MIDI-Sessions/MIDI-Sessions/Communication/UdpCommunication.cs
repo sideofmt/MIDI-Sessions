@@ -8,30 +8,40 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MIDI_Sessions.MIDI;
 
-namespace MIDI_Sessions.Communication
-{
-    class UdpCommunication
-    {
+namespace MIDI_Sessions.Communication {
+    class UdpCommunication {
+
+        // プライベートなフィールド
 
         private System.Net.Sockets.UdpClient udpClient = null;
 
-        string ipString = "127.0.0.1";
-        public int sendPort { set; get; }
-        public int recievePort { set; get; }
+        private string ipString = "127.0.0.1";
+        private int sendPort { set; get; }
+        private int recievePort { set; get; }
 
-        public MIDIData midiData { set; get; }
+        MIDIData midiData { set; get; }
 
-        public void setReciever(ref MIDIData mididata)
-        {
-            this.midiData = mididata;
+        private BaseAdapter mainform { set; get; }
+
+        /// <summary>
+        /// 通信の設定をします
+        /// </summary>
+        /// <param name="mainform">BaseAdapterを継承したクラス</param>
+        /// <param name="ipString">通信先のIPアドレス</param>
+        /// <param name="sendPort">送信に使用するポート番号</param>
+        /// <param name="recievePort">受信に使用するポート番号</param>
+        public UdpCommunication(BaseAdapter mainform, string ipString, int sendPort, int recievePort) {
+            this.mainform = mainform;
+            this.ipString = ipString;
+            this.sendPort = sendPort;
+            this.recievePort = recievePort;
         }
 
-        //Button1のClickイベントハンドラ
-        //データ受信の待機を開始する
-        public void open()
-        {
-            if (udpClient != null)
-            {
+        /// <summary>
+        /// データ受信の待機を開始します
+        /// </summary>
+        public void open() {
+            if (udpClient != null) {
                 return;
             }
 
@@ -44,26 +54,20 @@ namespace MIDI_Sessions.Communication
         }
 
         //データを受信した時
-        private void ReceiveCallback(IAsyncResult ar)
-        {
+        private void ReceiveCallback(IAsyncResult ar) {
             System.Net.Sockets.UdpClient udp =
                 (System.Net.Sockets.UdpClient)ar.AsyncState;
 
             //非同期受信を終了する
             System.Net.IPEndPoint remoteEP = null;
             byte[] rcvBytes;
-            try
-            {
+            try {
                 rcvBytes = udp.EndReceive(ar, ref remoteEP);
-            }
-            catch (System.Net.Sockets.SocketException ex)
-            {
+            } catch (System.Net.Sockets.SocketException ex) {
                 Console.WriteLine("受信エラー({0}/{1})",
                     ex.Message, ex.ErrorCode);
                 return;
-            }
-            catch (ObjectDisposedException ex)
-            {
+            } catch (ObjectDisposedException ex) {
                 //すでに閉じている時は終了
                 Console.WriteLine("Socketは閉じられています。");
                 return;
@@ -71,6 +75,7 @@ namespace MIDI_Sessions.Communication
 
 
             midiData = (MIDIData)ByteArrayToObject(rcvBytes);
+            mainform.recievedProcess(midiData);
 
             //データを文字列に変換する
             //string rcvMsg = System.Text.Encoding.UTF8.GetString(rcvBytes);
@@ -80,23 +85,22 @@ namespace MIDI_Sessions.Communication
         }
 
         //RichTextBox1にメッセージを表示する
-        public MIDIData getRecieveMessege()
-        {
+        public MIDIData getRecieveMessege() {
             return midiData;
         }
 
 
 
-        //Button2のClickイベントハンドラ
-        //データを送信する
-        public void send(MIDIData data)
-        {
+        /// <summary>
+        /// 引数のデータを送信します
+        /// </summary>
+        /// <param name="data"></param>
+        public void send(MIDIData data) {
             //送信するデータを作成する
             byte[] sendBytes = ToByteArray(data);
 
             //UdpClientを作成する
-            if (udpClient == null)
-            {
+            if (udpClient == null) {
                 udpClient = new System.Net.Sockets.UdpClient();
             }
 
@@ -107,52 +111,52 @@ namespace MIDI_Sessions.Communication
         }
 
         //データを送信した時
-        private void SendCallback(IAsyncResult ar)
-        {
+        private void SendCallback(IAsyncResult ar) {
             System.Net.Sockets.UdpClient udp =
                 (System.Net.Sockets.UdpClient)ar.AsyncState;
 
             //非同期送信を終了する
-            try
-            {
+            try {
                 udp.EndSend(ar);
-            }
-            catch (System.Net.Sockets.SocketException ex)
-            {
+            } catch (System.Net.Sockets.SocketException ex) {
                 Console.WriteLine("送信エラー({0}/{1})",
                     ex.Message, ex.ErrorCode);
-            }
-            catch (ObjectDisposedException ex)
-            {
+            } catch (ObjectDisposedException ex) {
                 //すでに閉じている時は終了
                 Console.WriteLine("Socketは閉じられています。");
             }
         }
 
-        //フォームのFormClosedイベントハンドラ
-        public void close()
-        {
+        /// <summary>
+        /// クライアントを閉じます
+        /// </summary>
+        public void close() {
             //UdpClientを閉じる
-            if (udpClient != null)
-            {
+            if (udpClient != null) {
                 udpClient.Close();
             }
         }
 
-
-        public static byte[] ToByteArray(object source)
-        {
+        /// <summary>
+        /// オブジェクトをバイト配列に変換します
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static byte[] ToByteArray(object source) {
             var formatter = new BinaryFormatter();
-            using (var stream = new MemoryStream())
-            {
+            using (var stream = new MemoryStream()) {
                 formatter.Serialize(stream, source);
                 return stream.ToArray();
             }
         }
-        public static Object ByteArrayToObject(byte[] arrBytes)
-        {
-            using (var memStream = new MemoryStream())
-            {
+
+        /// <summary>
+        /// バイト配列をオブジェクトに変換します
+        /// </summary>
+        /// <param name="arrBytes"></param>
+        /// <returns></returns>
+        public static Object ByteArrayToObject(byte[] arrBytes) {
+            using (var memStream = new MemoryStream()) {
                 var binForm = new BinaryFormatter();
                 memStream.Write(arrBytes, 0, arrBytes.Length);
                 memStream.Seek(0, SeekOrigin.Begin);

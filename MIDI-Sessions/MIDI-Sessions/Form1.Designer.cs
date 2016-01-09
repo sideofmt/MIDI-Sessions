@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.PlayMidi = new System.Windows.Forms.Button();
+            this.components = new System.ComponentModel.Container();
             this.VelocityBar = new System.Windows.Forms.TrackBar();
             this.VelocityLabel = new System.Windows.Forms.Label();
             this.VelocityLabel2 = new System.Windows.Forms.Label();
@@ -46,18 +46,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.number3 = new System.Windows.Forms.TextBox();
             this.ConnectLocalhost = new System.Windows.Forms.Button();
+            this.DisconnectButton = new System.Windows.Forms.Button();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.VelocityBar)).BeginInit();
             this.SuspendLayout();
-            // 
-            // PlayMidi
-            // 
-            this.PlayMidi.Location = new System.Drawing.Point(265, 264);
-            this.PlayMidi.Name = "PlayMidi";
-            this.PlayMidi.Size = new System.Drawing.Size(75, 23);
-            this.PlayMidi.TabIndex = 2;
-            this.PlayMidi.Text = "PlayMidi";
-            this.PlayMidi.UseVisualStyleBackColor = true;
-            this.PlayMidi.Click += new System.EventHandler(this.PlayMidi_Click);
             // 
             // VelocityBar
             // 
@@ -235,11 +227,29 @@
             this.ConnectLocalhost.UseVisualStyleBackColor = true;
             this.ConnectLocalhost.Click += new System.EventHandler(this.ConnectLocalhost_Click);
             // 
+            // DisconnectButton
+            // 
+            this.DisconnectButton.Cursor = System.Windows.Forms.Cursors.Default;
+            this.DisconnectButton.Location = new System.Drawing.Point(265, 264);
+            this.DisconnectButton.Name = "DisconnectButton";
+            this.DisconnectButton.Size = new System.Drawing.Size(75, 23);
+            this.DisconnectButton.TabIndex = 21;
+            this.DisconnectButton.Text = "Disconnect";
+            this.DisconnectButton.UseVisualStyleBackColor = true;
+            this.DisconnectButton.Click += new System.EventHandler(this.DisconnectButton_Click);
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 20;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(471, 340);
+            this.Controls.Add(this.DisconnectButton);
             this.Controls.Add(this.ConnectLocalhost);
             this.Controls.Add(this.number4);
             this.Controls.Add(this.label3);
@@ -257,7 +267,6 @@
             this.Controls.Add(this.VelocityLabel2);
             this.Controls.Add(this.VelocityLabel);
             this.Controls.Add(this.VelocityBar);
-            this.Controls.Add(this.PlayMidi);
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "Form1";
@@ -270,7 +279,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button PlayMidi;
         private System.Windows.Forms.TrackBar VelocityBar;
         private System.Windows.Forms.Label VelocityLabel;
         private System.Windows.Forms.Label VelocityLabel2;
@@ -288,6 +296,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox number3;
         private System.Windows.Forms.Button ConnectLocalhost;
+        private System.Windows.Forms.Button DisconnectButton;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

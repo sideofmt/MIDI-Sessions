@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Midi;
 using MIDI_Sessions.MIDI;
+using MIDI_Sessions.Communication;
 using System.Security.Permissions;
 
 namespace MIDI_Sessions{
-    public partial class Form1 : Form{
+    public partial class Form1 : Form, BaseAdapter {
         private IPlayMidi play;                         //PlayMidiのインターフェース。これを用いてMidiの再生、停止を行う。
         private Channel cha;                            //Midiのチャンネル。ユーザ毎にチャンネルが割り振られる。
         private int velocity;                           //velocity。ツマミを操作することによって値を変化させることができる。
@@ -23,7 +24,7 @@ namespace MIDI_Sessions{
         private Keys[] qwertyKey;                       //Keysの配列。
         private OutputDevice outputDevice;              //アウトプットデバイス。
         private MIDIData sendMidiData;
-        private List<MIDIData> receivedMidiData;
+        private List<MIDIData> BePlayedMidiData;
         private string IPv4;
         private int[] time;
 
@@ -46,6 +47,8 @@ namespace MIDI_Sessions{
             openDevice();                               //outputDeviceをOpenさせる。
             soundKey = new Dictionary<Keys, MIDIData>();
             time = new int[3];
+            isConnect = false;  // 通信をしているかどうか
+            BePlayedMidiData = new List<MIDIData>();
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
             qwertyKey = new Keys[] { Keys.A, Keys.W, Keys.S, Keys.E, Keys.D, Keys.F, Keys.T, Keys.G, Keys.Y, Keys.H, Keys.U, Keys.J, Keys.K };
@@ -82,27 +85,35 @@ namespace MIDI_Sessions{
         /// </summary>
         /// <param name="midiData"></param>
         private void playMidi() {
-            foreach(MIDIData midi in receivedMidiData){
-                play = new PlayMidi(midi, outputDevice);
+            foreach (MIDIData midi in BePlayedMidiData) {
+                if (midi.IsPushing) 
+                {
+                    play = new PlayMidi(midi, outputDevice);
+                    play.Run();
+                } 
+                else 
+                {
+                    play = new PlayMidi(midi, outputDevice);
+                    play.Stop();
+                }
             }
-            receivedMidiData.Clear();
-            play.Run();
+            BePlayedMidiData.Clear();
 
             return;
         }
 
-        /// <summary>
-        /// 受け取ったMIDIDataを停止する。
-        /// </summary>
-        /// <param name="midiData"></param>
-        private void stopMidi() {
-            foreach (MIDIData midi in receivedMidiData) {
-                play = new PlayMidi(midi, outputDevice);
-            }
-            play.Stop();
+        ///// <summary>
+        ///// 受け取ったMIDIDataを停止する。
+        ///// </summary>
+        ///// <param name="midiData"></param>
+        //private void stopMidi() {
+        //    foreach (MIDIData midi in BePlayedMidiData) {
+        //        play = new PlayMidi(midi, outputDevice);
+        //        play.Stop();
+        //    }
 
-            return;
-        }
+        //    return;
+        //}
         
         /// <summary>
         /// 何らかのキーが押された時の処理
@@ -120,8 +131,9 @@ namespace MIDI_Sessions{
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
                 sendMidiData = soundKey[e.KeyCode];
-                play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
-                play.Run(); //音の再生。
+                BePlayedMidiData.Add(soundKey[e.KeyCode]);
+                //play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
+                //play.Run(); //音の再生。
             }
             return;
         }
@@ -142,8 +154,9 @@ namespace MIDI_Sessions{
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
                 sendMidiData = soundKey[e.KeyCode];
-                play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
-                play.Stop();    //音の停止。
+                BePlayedMidiData.Add(soundKey[e.KeyCode]);
+                //play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
+                //play.Stop();    //音の停止。
             }else{
                 /* 方向キーの左右どちらかが離された場合の処理 */
                 for (int i = 0; i < qwertyKey.Length;i++ ) {
@@ -324,6 +337,80 @@ namespace MIDI_Sessions{
                 e.Handled = true;   //入力を中止する。
             }
             return;
+        }
+
+        /// <summary>
+        /// 通信を切断するボタンが押された際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DisconnectButton_Click(object sender, EventArgs e) {
+
+        }
+
+        // -------------------------------------
+        // ここから先が通信部（非同期動作）
+        // -------------------------------------
+
+        private int sendPort;
+        private int recievePort;
+        private Communication.UdpCommunication udp;
+        private bool isConnect;
+
+        /// <summary>
+        /// UDP通信の設定をして通信を開始します
+        /// </summary>
+        private void startConnection() {
+            // 使用ポートの設定
+            sendPort = 8000;
+            recievePort = 8001;
+
+            // MIDIDataをnullに
+            sendMidiData = null;
+            BePlayedMidiData.Clear();
+
+            udp = new UdpCommunication(this, IPv4, sendPort, recievePort);
+
+            // UPD通信を開始
+            udp.open();
+
+            // Timerを開始
+            timer1.Enabled = true;
+            //backgroundWorker1.RunWorkerAsync();
+
+        }
+
+        /// <summary>
+        /// MIDIDataを受け取った時に呼び出される処理。
+        /// </summary>
+        /// <param name="mididata"></param>
+        void BaseAdapter.recievedProcess(MIDIData mididata) {
+            this.BePlayedMidiData.Add(mididata);
+        }
+
+        /// <summary>
+        /// Timerで設定した間隔で処理を行います
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void timer1_Tick(object sender, EventArgs e) {
+            if (isConnect) {
+                if (udp == null) {
+                    MessageBox.Show("通信を行えません。", "エラー", MessageBoxButtons.OK);
+                    // Timerを終了
+                    timer1.Enabled = false;
+                    return;
+                }
+                if (sendMidiData == null) {
+                    Console.WriteLine("送信するMIDIDataがありません");
+                    return;
+                }
+                udp.send(sendMidiData);
+                sendMidiData = null;
+            }
+            playMidi();
+            //stopMidi();
+
         }
 
         //End Form1
