@@ -14,12 +14,14 @@ namespace MIDI_Sessions.MIDI {
                                              *MIDIDataかMidiファイルかを判断。
                                              *MIDIDataである場合はTrue。 
                                              */
+        private ProgramChangeMessage prog; 
         private OutputDevice outputDevice;  //アウトプットデバイス。Midiを再生する際に使用。
         
         /*--引数がMIDIDataの場合のコンストラクタ--*/
         public PlayMidi(MIDIData midiData, OutputDevice outputDevice){
             this.midiData = midiData;
             this.outputDevice = outputDevice;
+            this.prog = new ProgramChangeMessage(outputDevice, midiData.Cha, midiData.Inst, 1);
             isMidiData = true;
         }
 
@@ -53,7 +55,7 @@ namespace MIDI_Sessions.MIDI {
             Console.WriteLine(midiData.Cha);
             Console.WriteLine(midiData.Pit);
             Console.WriteLine(midiData.Velocity);
-            Console.WriteLine(midiData.ProgChange);
+            Console.WriteLine(midiData.Inst);
             outputDevice.SendNoteOff(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;
@@ -61,6 +63,7 @@ namespace MIDI_Sessions.MIDI {
 
         /*--MIDIDataの再生--*/
         public void playMIDIData() {
+            prog.SendNow();
             outputDevice.SendNoteOn(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;

@@ -32,6 +32,8 @@
             this.VelocityBar = new System.Windows.Forms.TrackBar();
             this.VelocityLabel = new System.Windows.Forms.Label();
             this.VelocityLabel2 = new System.Windows.Forms.Label();
+            this.InstList = new System.Windows.Forms.ListBox();
+            this.InstLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.VelocityBar)).BeginInit();
             this.SuspendLayout();
             // 
@@ -84,11 +86,33 @@
             this.VelocityLabel2.Text = "100";
             this.VelocityLabel2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // InstList
+            // 
+            this.InstList.FormattingEnabled = true;
+            this.InstList.ItemHeight = 12;
+            this.InstList.Location = new System.Drawing.Point(92, 31);
+            this.InstList.Name = "InstList";
+            this.InstList.Size = new System.Drawing.Size(149, 256);
+            this.InstList.TabIndex = 7;
+            this.InstList.SelectedIndexChanged += new System.EventHandler(this.InstList_SelectedIndexChanged);
+            // 
+            // InstLabel
+            // 
+            this.InstLabel.AutoSize = true;
+            this.InstLabel.Font = new System.Drawing.Font("MS UI Gothic", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.InstLabel.Location = new System.Drawing.Point(123, 9);
+            this.InstLabel.Name = "InstLabel";
+            this.InstLabel.Size = new System.Drawing.Size(81, 16);
+            this.InstLabel.TabIndex = 8;
+            this.InstLabel.Text = "Instrument";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(406, 341);
+            this.Controls.Add(this.InstLabel);
+            this.Controls.Add(this.InstList);
             this.Controls.Add(this.VelocityLabel2);
             this.Controls.Add(this.VelocityLabel);
             this.Controls.Add(this.VelocityBar);
@@ -108,6 +132,8 @@
         private System.Windows.Forms.TrackBar VelocityBar;
         private System.Windows.Forms.Label VelocityLabel;
         private System.Windows.Forms.Label VelocityLabel2;
+        private System.Windows.Forms.ListBox InstList;
+        private System.Windows.Forms.Label InstLabel;
     }
 }
 

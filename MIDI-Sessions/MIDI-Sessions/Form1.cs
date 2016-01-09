@@ -36,14 +36,18 @@ namespace MIDI_Sessions{
             openDevice();                               //outputDeviceをOpenさせる。
             progChange = new ProgramChangeMessage(outputDevice, cha, inst, 1);
             soundKey = new Dictionary<Keys, MIDIData>();
-            VelocityLabel2.Update();
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
             qwertyKey = new Keys[] { Keys.A, Keys.W, Keys.S, Keys.E, Keys.D, Keys.F, Keys.T, Keys.G, Keys.Y, Keys.H, Keys.U, Keys.J, Keys.K };
 
+            for (int i = 0; i <= (int)Instrument.Gunshot; i++) {
+                this.InstList.Items.Add((i + 1).ToString() + ". " + (Instrument.AcousticGrandPiano + i).ToString());
+                //this.InstList.Items.Add(Instrument.AcousticGrandPiano + i);
+            }
+
             /*このfor文内でキーの値と出力する音を関連付けている。*/
             for (int i = 0; i < qwertyKey.Length; i++) {
-                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, progChange));
+                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst));
             }
         }
 
@@ -106,6 +110,18 @@ namespace MIDI_Sessions{
                             soundKey[qwertyKey[i]].Pit -= pitch;    //ピッチを1オクターブ低くする。
                         }
                         break;
+                    //case Keys.Up:
+                    //    /* 上の場合 */
+                    //    if (inst <= Instrument.AcousticGrandPiano) inst = Instrument.Gunshot;  //Instrumentが0番のPiano場合、127番のGunshotにする。
+                    //    else inst--;    //それ以外の場合は一つ下の番号のInstrumentに変更する。
+                    //    instChange(inst);
+                    //    break;
+                    //case Keys.Down:
+                    //    /* 下の場合 */
+                    //    if (inst >= Instrument.Gunshot) inst = Instrument.AcousticGrandPiano;  //Instrumentが127番のGunshot場合、0番のAcousticGrandPianoにする。
+                    //    else inst++;    //それ以外の場合は一つ上の番号のInstrumentに変更する。
+                    //    instChange(inst);
+                    //    break;
                     default:
                         return;
                 }
@@ -165,6 +181,22 @@ namespace MIDI_Sessions{
             }
 
             return false;
+        }
+
+        private void InstList_SelectedIndexChanged(object sender, EventArgs e) {
+            string instString = this.InstList.SelectedItem.ToString();
+            string dot = ".";
+            int foundIndex = instString.LastIndexOf(dot);
+            instString = instString.Substring(0, foundIndex);
+            inst = (Instrument)(int.Parse(instString) - 1);
+            instChange(inst);
+        }
+
+        private void instChange(Instrument inst) {
+            for (int i = 0; i < qwertyKey.Length; i++) {
+                soundKey[qwertyKey[i]].Inst = inst;    //各鍵盤のInstrumentを変更する。
+            }
+            progChange.SendNow();
         }
 
         //End Form1
