@@ -16,8 +16,8 @@ namespace MIDI_Sessions{
         private IPlayMidi play;                         //PlayMidiのインターフェース。これを用いてMidiの再生、停止を行う。
         private Channel cha;                            //Midiのチャンネル。ユーザ毎にチャンネルが割り振られる。
         private int velocity;                           //velocity。ツマミを操作することによって値を変化させることができる。
-        private ProgramChangeMessage progChange;
         private Instrument inst;
+        private Instrument preInst;
         private const int pitch = 12;                   //ピッチ。音の高さを変更する際に使用。
         private Dictionary<Keys, MIDIData> soundKey;    //キーの値と出力する音を関連付けるためのDictionary。
         private Keys[] qwertyKey;                       //Keysの配列。
@@ -32,9 +32,9 @@ namespace MIDI_Sessions{
             cha = Channel.Channel1;                     //Midiチャンネルの割り当て。
             velocity = 100;                             //velocityの初期値は100。
             inst = Instrument.AcousticGrandPiano;
+            preInst = inst;
             this.VelocityBar.Value = velocity;
             openDevice();                               //outputDeviceをOpenさせる。
-            progChange = new ProgramChangeMessage(outputDevice, cha, inst, 1);
             soundKey = new Dictionary<Keys, MIDIData>();
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
@@ -42,7 +42,6 @@ namespace MIDI_Sessions{
 
             for (int i = 0; i <= (int)Instrument.Gunshot; i++) {
                 this.InstList.Items.Add((i + 1).ToString() + ". " + (Instrument.AcousticGrandPiano + i).ToString());
-                //this.InstList.Items.Add(Instrument.AcousticGrandPiano + i);
             }
 
             /*このfor文内でキーの値と出力する音を関連付けている。*/
@@ -74,7 +73,7 @@ namespace MIDI_Sessions{
                 if (soundKey[e.KeyCode].IsPushing || soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;   //そのままreturnで終了
                 
                 soundKey[e.KeyCode].IsPushing = true;   //キーが押されている状態であることを示すIsPushingをtrueにする。
-                play = new PlayMidi(soundKey[e.KeyCode], outputDevice); 
+                play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
                 play.Run(); //音の再生。
             }
             return;
@@ -88,7 +87,7 @@ namespace MIDI_Sessions{
                 if (soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;    //そのままreturnで終了
 
                 soundKey[e.KeyCode].IsPushing = false;  //キーが押されている状態であることを示すIsPushingをfalseにする。
-                play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
+                play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
                 play.Stop();    //音の停止。
             }else{
                 /* 方向キーの左右どちらかが離された場合の処理 */
@@ -184,19 +183,23 @@ namespace MIDI_Sessions{
         }
 
         private void InstList_SelectedIndexChanged(object sender, EventArgs e) {
+            preInst = inst;
             string instString = this.InstList.SelectedItem.ToString();
             string dot = ".";
             int foundIndex = instString.LastIndexOf(dot);
             instString = instString.Substring(0, foundIndex);
             inst = (Instrument)(int.Parse(instString) - 1);
             instChange(inst);
+
+            return;
         }
 
         private void instChange(Instrument inst) {
             for (int i = 0; i < qwertyKey.Length; i++) {
                 soundKey[qwertyKey[i]].Inst = inst;    //各鍵盤のInstrumentを変更する。
             }
-            progChange.SendNow();
+
+            return;
         }
 
         //End Form1

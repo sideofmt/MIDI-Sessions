@@ -118,6 +118,7 @@
             this.Controls.Add(this.VelocityBar);
             this.Controls.Add(this.PlayMidi);
             this.KeyPreview = true;
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.VelocityBar)).EndInit();
