@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MIDI_Sessions.MIDI;
 
 namespace MIDI_Sessions.Communication
 {
@@ -18,9 +19,9 @@ namespace MIDI_Sessions.Communication
         public int sendPort { set; get; }
         public int recievePort { set; get; }
 
-        public MIDIdata midiData { set; get; }
+        public MIDIData midiData { set; get; }
 
-        public void setReciever(ref MIDIdata mididata)
+        public void setReciever(ref MIDIData mididata)
         {
             this.midiData = mididata;
         }
@@ -69,7 +70,7 @@ namespace MIDI_Sessions.Communication
             }
 
 
-            midiData = (MIDIdata)ByteArrayToObject(rcvBytes);
+            midiData = (MIDIData)ByteArrayToObject(rcvBytes);
 
             //データを文字列に変換する
             //string rcvMsg = System.Text.Encoding.UTF8.GetString(rcvBytes);
@@ -79,7 +80,7 @@ namespace MIDI_Sessions.Communication
         }
 
         //RichTextBox1にメッセージを表示する
-        public MIDIdata getRecieveMessege()
+        public MIDIData getRecieveMessege()
         {
             return midiData;
         }
@@ -88,7 +89,7 @@ namespace MIDI_Sessions.Communication
 
         //Button2のClickイベントハンドラ
         //データを送信する
-        public void send(MIDIdata data)
+        public void send(MIDIData data)
         {
             //送信するデータを作成する
             byte[] sendBytes = ToByteArray(data);
@@ -140,7 +141,7 @@ namespace MIDI_Sessions.Communication
 
 
         public static byte[] ToByteArray(object source)
-        {         
+        {
             var formatter = new BinaryFormatter();
             using (var stream = new MemoryStream())
             {
@@ -159,9 +160,6 @@ namespace MIDI_Sessions.Communication
                 return obj;
             }
         }
-
-
-
 
     }
 }
