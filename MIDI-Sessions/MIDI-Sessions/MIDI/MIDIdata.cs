@@ -14,15 +14,17 @@ namespace MIDI_Sessions.MIDI{
         private Pitch pit;      //音高。
         private int velocity;   //ベロシティ。音の強さ。
         private Instrument inst;//インスト。
+        private Instrument preInst;
         private bool isPushing; //キーボードが押されているかを判断。押されている場合はTrue。
         private int[] now;      //キーボードが押された、離された時の時間。[0]:ミリ秒 [1]:秒　[2]:分
 
-        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing, Instrument inst, int[] now) {
+        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing, Instrument inst, Instrument preInst, int[] now) {
             this.cha = cha;
             this.pit = pit;
             this.velocity = velocity;
             this.isPushing = isPushing;
             this.inst = inst;
+            this.preInst = preInst;
             this.now = now;
         }
 
@@ -51,6 +53,11 @@ namespace MIDI_Sessions.MIDI{
         public Instrument Inst {
             set { this.inst = value; }
             get { return this.inst; }
+        }
+
+        public Instrument PreInst {
+            set { this.preInst = value; }
+            get { return this.preInst; }
         }
 
         public int[] Now {

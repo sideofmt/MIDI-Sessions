@@ -54,11 +54,13 @@ namespace MIDI_Sessions{
 
             /*このfor文内でキーの値と出力する音を関連付けている。*/
             for (int i = 0; i < qwertyKey.Length; i++) {
-                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst, time));
+                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst, preInst, time));
             }
         }
 
-        /*-- outputDeviceをOpenする --*/
+        /// <summary>
+        /// outputDeviceをOpenする。
+        /// </summary>
         private void openDevice() {
             outputDevice = SessionUtil.ChooseOutpuDevice(); //OutputDeviceを選択。
 
@@ -72,8 +74,34 @@ namespace MIDI_Sessions{
             }
             return;
         }
+
+        /// <summary>
+        /// 受け取ったMIDIDataを再生する。
+        /// </summary>
+        /// <param name="midiData"></param>
+        private void playMidi(MIDIData midiData) {
+            play = new PlayMidi(midiData, outputDevice);
+            play.Run();
+
+            return;
+        }
+
+        /// <summary>
+        /// 受け取ったMIDIDataを停止する。
+        /// </summary>
+        /// <param name="midiData"></param>
+        private void stopMidi(MIDIData midiData) {
+            play = new PlayMidi(midiData, outputDevice);
+            play.Stop();
+
+            return;
+        }
         
-        /*-- 何らかのキーが押された時の処理 --*/
+        /// <summary>
+        /// 何らかのキーが押された時の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_KeyDown(object sender, KeyEventArgs e) {
             /* soundKeyでMIDIDataに関連付けられたキーが入力された場合の処理 */
             if(soundKey.ContainsKey(e.KeyCode)){
@@ -84,13 +112,17 @@ namespace MIDI_Sessions{
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
-                play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
+                play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
                 play.Run(); //音の再生。
             }
             return;
         }
 
-        /*-- 何らかのキーが離された時の処理 --*/
+        /// <summary>
+        /// 何らかのキーが離された時の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_KeyUp(object sender, KeyEventArgs e) {
             /* soundKeyでMIDIDataに関連付けられたキーが離された場合の処理 */
             if(soundKey.ContainsKey(e.KeyCode)){
@@ -101,7 +133,7 @@ namespace MIDI_Sessions{
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
-                play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
+                play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
                 play.Stop();    //音の停止。
             }else{
                 /* 方向キーの左右どちらかが離された場合の処理 */
@@ -146,18 +178,33 @@ namespace MIDI_Sessions{
 
         }
 
+        /// <summary>
+        /// VelocityBarをスクロールした際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void VelocityBar_Scroll(object sender, EventArgs e) {
             velocity = VelocityBar.Value;
             this.VelocityLabel2.Text = velocity.ToString();
+            return;
         }
 
+        /// <summary>
+        /// VelocityBarのマウスクリック状態が解除された際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void VelocityBar_MouseUp(object sender, EventArgs e) {
             for (int i = 0; i < qwertyKey.Length; i++) {
                 soundKey[qwertyKey[i]].Velocity = velocity;
             }
+            return;
         }
 
-        /*-- 終了時の処理 --*/
+        /// <summary>
+        /// 終了時の処理
+        /// </summary>
+        /// <param name="m"></param>
         protected override void WndProc(ref System.Windows.Forms.Message m) {
             const int WM_SYSCOMMAND = 0x112;
             const long SC_CLOSE = 0xF060L;
@@ -175,7 +222,10 @@ namespace MIDI_Sessions{
             base.WndProc(ref m);
         }
 
-        /*-- 終了確認のメッセージボックスを表示 --*/
+        /// <summary>
+        /// 終了確認のメッセージボックスを表示
+        /// </summary>
+        /// <returns></returns>
         private bool ApplicationExit() {
             //メッセージボックスを表示する
             DialogResult result = MessageBox.Show("終了しますか？",
@@ -196,6 +246,11 @@ namespace MIDI_Sessions{
             return false;
         }
 
+        /// <summary>
+        /// Instrumentのリスト内の項目を選択した際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void InstList_SelectedIndexChanged(object sender, EventArgs e) {
             preInst = inst;
             string instString = this.InstList.SelectedItem.ToString();
@@ -208,6 +263,10 @@ namespace MIDI_Sessions{
             return;
         }
 
+        /// <summary>
+        /// 各キーのInstrumentを変更する際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="inst"></param>
         private void instChange(Instrument inst) {
             for (int i = 0; i < qwertyKey.Length; i++) {
                 soundKey[qwertyKey[i]].Inst = inst;    //各鍵盤のInstrumentを変更する。
@@ -216,9 +275,16 @@ namespace MIDI_Sessions{
             return;
         }
 
+        /// <summary>
+        /// "Connect"ボタンをクリックした際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e) {
             IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
-            Console.WriteLine(IPv4);
+            if (this.number1.Text.Length > 0 && this.number2.Text.Length > 0 && this.number3.Text.Length > 0 && this.number4.Text.Length > 0) {
+                Console.WriteLine(IPv4);
+            }
             this.number1.Clear();
             this.number2.Clear();
             this.number3.Clear();
@@ -227,6 +293,11 @@ namespace MIDI_Sessions{
             return;
         }
 
+        /// <summary>
+        /// "Connect Localhost"ボタンをクリックした際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConnectLocalhost_Click(object sender, EventArgs e) {
             IPv4 = "localhost";
             Console.WriteLine(IPv4);
@@ -234,10 +305,16 @@ namespace MIDI_Sessions{
             return;
         }
 
+        /// <summary>
+        /// IPアドレスを入力した際に呼び出されるメソッド。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Number_KeyPress(object sender, KeyPressEventArgs e) {
-            if(!Char.IsDigit(e.KeyChar) && !e.KeyChar.Equals('\b')) {
-                e.Handled = true;
+            if(!Char.IsDigit(e.KeyChar) && !e.KeyChar.Equals('\b')) {   //数字、又はバックスペース以外が入力された場合
+                e.Handled = true;   //入力を中止する。
             }
+            return;
         }
 
         //End Form1
