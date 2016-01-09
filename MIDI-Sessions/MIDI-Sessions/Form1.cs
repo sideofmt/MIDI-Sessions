@@ -22,6 +22,7 @@ namespace MIDI_Sessions{
         private Dictionary<Keys, MIDIData> soundKey;    //キーの値と出力する音を関連付けるためのDictionary。
         private Keys[] qwertyKey;                       //Keysの配列。
         private OutputDevice outputDevice;              //アウトプットデバイス。
+        private string IPv4;
 
         public Form1(){
             InitializeComponent();
@@ -29,10 +30,15 @@ namespace MIDI_Sessions{
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.KeyUp += new KeyEventHandler(Form1_KeyUp);
             this.VelocityBar.MouseUp += new MouseEventHandler(VelocityBar_MouseUp);
+            this.number1.KeyPress += new KeyPressEventHandler(Number_KeyPress);
+            this.number2.KeyPress += new KeyPressEventHandler(Number_KeyPress);
+            this.number3.KeyPress += new KeyPressEventHandler(Number_KeyPress);
+            this.number4.KeyPress += new KeyPressEventHandler(Number_KeyPress);
             cha = Channel.Channel1;                     //Midiチャンネルの割り当て。
             velocity = 100;                             //velocityの初期値は100。
             inst = Instrument.AcousticGrandPiano;
             preInst = inst;
+            IPv4 = "";
             this.VelocityBar.Value = velocity;
             openDevice();                               //outputDeviceをOpenさせる。
             soundKey = new Dictionary<Keys, MIDIData>();
@@ -200,6 +206,30 @@ namespace MIDI_Sessions{
             }
 
             return;
+        }
+
+        private void ConnectButton_Click(object sender, EventArgs e) {
+            IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
+            Console.WriteLine(IPv4);
+            this.number1.Clear();
+            this.number2.Clear();
+            this.number3.Clear();
+            this.number4.Clear();
+
+            return;
+        }
+
+        private void ConnectLocalhost_Click(object sender, EventArgs e) {
+            IPv4 = "localhost";
+            Console.WriteLine(IPv4);
+
+            return;
+        }
+
+        private void Number_KeyPress(object sender, KeyPressEventArgs e) {
+            if(!Char.IsDigit(e.KeyChar) && !e.KeyChar.Equals('\b')) {
+                e.Handled = true;
+            }
         }
 
         //End Form1
