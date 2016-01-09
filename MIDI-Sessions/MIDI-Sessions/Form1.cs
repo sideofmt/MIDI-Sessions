@@ -23,6 +23,7 @@ namespace MIDI_Sessions{
         private Keys[] qwertyKey;                       //Keysの配列。
         private OutputDevice outputDevice;              //アウトプットデバイス。
         private string IPv4;
+        private int[] time;
 
         public Form1(){
             InitializeComponent();
@@ -42,6 +43,7 @@ namespace MIDI_Sessions{
             this.VelocityBar.Value = velocity;
             openDevice();                               //outputDeviceをOpenさせる。
             soundKey = new Dictionary<Keys, MIDIData>();
+            time = new int[3];
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
             qwertyKey = new Keys[] { Keys.A, Keys.W, Keys.S, Keys.E, Keys.D, Keys.F, Keys.T, Keys.G, Keys.Y, Keys.H, Keys.U, Keys.J, Keys.K };
@@ -52,7 +54,7 @@ namespace MIDI_Sessions{
 
             /*このfor文内でキーの値と出力する音を関連付けている。*/
             for (int i = 0; i < qwertyKey.Length; i++) {
-                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst));
+                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst, time));
             }
         }
 
@@ -79,6 +81,9 @@ namespace MIDI_Sessions{
                 if (soundKey[e.KeyCode].IsPushing || soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;   //そのままreturnで終了
                 
                 soundKey[e.KeyCode].IsPushing = true;   //キーが押されている状態であることを示すIsPushingをtrueにする。
+                time[0] = DateTime.Now.Millisecond;
+                time[1] = DateTime.Now.Second;
+                time[2] = DateTime.Now.Minute;
                 play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
                 play.Run(); //音の再生。
             }
@@ -93,6 +98,9 @@ namespace MIDI_Sessions{
                 if (soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;    //そのままreturnで終了
 
                 soundKey[e.KeyCode].IsPushing = false;  //キーが押されている状態であることを示すIsPushingをfalseにする。
+                time[0] = DateTime.Now.Millisecond;
+                time[1] = DateTime.Now.Second;
+                time[2] = DateTime.Now.Minute;
                 play = new PlayMidi(soundKey[e.KeyCode], preInst, outputDevice);
                 play.Stop();    //音の停止。
             }else{

@@ -58,6 +58,7 @@ namespace MIDI_Sessions.MIDI {
             Console.WriteLine(midiData.Pit);
             Console.WriteLine(midiData.Velocity);
             Console.WriteLine(midiData.Inst);
+            Console.WriteLine(midiData.Now[2] + ":" + midiData.Now[1] + ":" + midiData.Now[0]);
             outputDevice.SendNoteOff(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;
@@ -68,6 +69,7 @@ namespace MIDI_Sessions.MIDI {
             if(preInst != midiData.Inst){
                 prog.SendNow();
             }
+            Console.WriteLine(midiData.Now[2] + ":" + midiData.Now[1] + ":" + midiData.Now[0]);
             outputDevice.SendNoteOn(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;

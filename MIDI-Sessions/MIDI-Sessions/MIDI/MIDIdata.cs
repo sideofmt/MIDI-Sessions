@@ -13,15 +13,17 @@ namespace MIDI_Sessions.MIDI{
         private Channel cha;    //MIDIチャンネル。基本的にユーザ1人に対して1つのチャンネルが与えられる。
         private Pitch pit;      //音高。
         private int velocity;   //ベロシティ。音の強さ。
-        private Instrument inst;
+        private Instrument inst;//インスト。
         private bool isPushing; //キーボードが押されているかを判断。押されている場合はTrue。
+        private int[] now;      //キーボードが押された、離された時の時間。[0]:ミリ秒 [1]:秒　[2]:分
 
-        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing, Instrument inst) {
+        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing, Instrument inst, int[] now) {
             this.cha = cha;
             this.pit = pit;
             this.velocity = velocity;
             this.isPushing = isPushing;
             this.inst = inst;
+            this.now = now;
         }
 
         /**------ 以下はgetterとsetter ------**/
@@ -49,6 +51,11 @@ namespace MIDI_Sessions.MIDI{
         public Instrument Inst {
             set { this.inst = value; }
             get { return this.inst; }
+        }
+
+        public int[] Now {
+            set { this.now = value; }
+            get { return this.now; }
         }
 
         //End MIDIData
