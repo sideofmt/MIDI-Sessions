@@ -13,13 +13,15 @@ namespace MIDI_Sessions.MIDI{
         private Channel cha;    //MIDIチャンネル。基本的にユーザ1人に対して1つのチャンネルが与えられる。
         private Pitch pit;      //音高。
         private int velocity;   //ベロシティ。音の強さ。
+        private ProgramChangeMessage progChange;
         private bool isPushing; //キーボードが押されているかを判断。押されている場合はTrue。
 
-        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing) {
+        public MIDIData(Channel cha, Pitch pit, int velocity, bool isPushing, ProgramChangeMessage progChange) {
             this.cha = cha;
             this.pit = pit;
             this.velocity = velocity;
             this.isPushing = isPushing;
+            this.progChange = progChange;
         }
 
         /**------ 以下はgetterとsetter ------**/
@@ -42,6 +44,11 @@ namespace MIDI_Sessions.MIDI{
         public bool IsPushing {
             set { this.isPushing = value; }
             get { return this.isPushing; }
+        }
+
+        public ProgramChangeMessage ProgChange {
+            set { this.progChange = value; }
+            get { return this.progChange; }
         }
 
         //End MIDIData

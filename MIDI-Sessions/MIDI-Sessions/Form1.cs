@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Midi;
 using MIDI_Sessions.MIDI;
+using System.Security.Permissions;
 
 namespace MIDI_Sessions{
     public partial class Form1 : Form{
         private IPlayMidi play;                         //PlayMidiのインターフェース。これを用いてMidiの再生、停止を行う。
         private Channel cha;                            //Midiのチャンネル。ユーザ毎にチャンネルが割り振られる。
         private int velocity;                           //velocity。ツマミを操作することによって値を変化させることができる。
+        private ProgramChangeMessage progChange;
+        private Instrument inst;
         private const int pitch = 12;                   //ピッチ。音の高さを変更する際に使用。
         private Dictionary<Keys, MIDIData> soundKey;    //キーの値と出力する音を関連付けるためのDictionary。
         private Keys[] qwertyKey;                       //Keysの配列。
@@ -25,12 +28,13 @@ namespace MIDI_Sessions{
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(Form1_KeyDown);
             this.KeyUp += new KeyEventHandler(Form1_KeyUp);
-            this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);     //終了する際に処理をこなうために実装。
             this.VelocityBar.MouseUp += new MouseEventHandler(VelocityBar_MouseUp);
             cha = Channel.Channel1;                     //Midiチャンネルの割り当て。
             velocity = 100;                             //velocityの初期値は100。
+            inst = Instrument.AcousticGrandPiano;
             this.VelocityBar.Value = velocity;
-            openDevice();                               //outputDeviceをOpenさせる。 
+            openDevice();                               //outputDeviceをOpenさせる。
+            progChange = new ProgramChangeMessage(outputDevice, cha, inst, 1);
             soundKey = new Dictionary<Keys, MIDIData>();
             VelocityLabel2.Update();
 
@@ -39,13 +43,8 @@ namespace MIDI_Sessions{
 
             /*このfor文内でキーの値と出力する音を関連付けている。*/
             for (int i = 0; i < qwertyKey.Length; i++) {
-                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false));
+                soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, progChange));
             }
-        }
-
-        /*-- 終了時の処理 --*/
-        private void Form1_FormClosing(Object sender, FormClosingEventArgs e) {
-            outputDevice.Close();   //outputDeviceをCloseする。
         }
 
         /*-- outputDeviceをOpenする --*/
@@ -127,6 +126,45 @@ namespace MIDI_Sessions{
             for (int i = 0; i < qwertyKey.Length; i++) {
                 soundKey[qwertyKey[i]].Velocity = velocity;
             }
+        }
+
+        /*-- 終了時の処理 --*/
+        protected override void WndProc(ref System.Windows.Forms.Message m) {
+            const int WM_SYSCOMMAND = 0x112;
+            const long SC_CLOSE = 0xF060L;
+
+            if (m.Msg == WM_SYSCOMMAND &&
+                (m.WParam.ToInt64() & 0xFFF0L) == SC_CLOSE) {
+                bool exit = ApplicationExit();
+                if (exit) {
+                    outputDevice.Close();   //outputDeviceをCloseする。
+                    this.Close();
+                }
+                return;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        /*-- 終了確認のメッセージボックスを表示 --*/
+        private bool ApplicationExit() {
+            //メッセージボックスを表示する
+            DialogResult result = MessageBox.Show("終了しますか？",
+                "終了確認",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Exclamation,
+                MessageBoxDefaultButton.Button2);
+
+            //何が選択されたか調べる
+            if (result == DialogResult.Yes) {
+                //「はい」が選択された時
+                return true;
+            } else if (result == DialogResult.No) {
+                //「いいえ」が選択された時
+                return false;
+            }
+
+            return false;
         }
 
         //End Form1

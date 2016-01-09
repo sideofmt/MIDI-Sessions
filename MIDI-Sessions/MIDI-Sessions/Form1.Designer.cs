@@ -52,6 +52,7 @@
             this.VelocityBar.Name = "VelocityBar";
             this.VelocityBar.Orientation = System.Windows.Forms.Orientation.Vertical;
             this.VelocityBar.Size = new System.Drawing.Size(45, 237);
+            this.VelocityBar.SmallChange = 0;
             this.VelocityBar.TabIndex = 3;
             this.VelocityBar.Tag = "";
             this.VelocityBar.TickFrequency = 10;

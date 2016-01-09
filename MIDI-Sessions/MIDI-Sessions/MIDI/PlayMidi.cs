@@ -53,6 +53,7 @@ namespace MIDI_Sessions.MIDI {
             Console.WriteLine(midiData.Cha);
             Console.WriteLine(midiData.Pit);
             Console.WriteLine(midiData.Velocity);
+            Console.WriteLine(midiData.ProgChange);
             outputDevice.SendNoteOff(midiData.Cha, midiData.Pit, midiData.Velocity);
 
             return;
