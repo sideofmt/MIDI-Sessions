@@ -22,6 +22,8 @@ namespace MIDI_Sessions{
         private Dictionary<Keys, MIDIData> soundKey;    //キーの値と出力する音を関連付けるためのDictionary。
         private Keys[] qwertyKey;                       //Keysの配列。
         private OutputDevice outputDevice;              //アウトプットデバイス。
+        private MIDIData sendMidiData;
+        private List<MIDIData> receivedMidiData;
         private string IPv4;
         private int[] time;
 
@@ -79,8 +81,11 @@ namespace MIDI_Sessions{
         /// 受け取ったMIDIDataを再生する。
         /// </summary>
         /// <param name="midiData"></param>
-        private void playMidi(MIDIData midiData) {
-            play = new PlayMidi(midiData, outputDevice);
+        private void playMidi() {
+            foreach(MIDIData midi in receivedMidiData){
+                play = new PlayMidi(midi, outputDevice);
+            }
+            receivedMidiData.Clear();
             play.Run();
 
             return;
@@ -90,8 +95,10 @@ namespace MIDI_Sessions{
         /// 受け取ったMIDIDataを停止する。
         /// </summary>
         /// <param name="midiData"></param>
-        private void stopMidi(MIDIData midiData) {
-            play = new PlayMidi(midiData, outputDevice);
+        private void stopMidi() {
+            foreach (MIDIData midi in receivedMidiData) {
+                play = new PlayMidi(midi, outputDevice);
+            }
             play.Stop();
 
             return;
@@ -112,6 +119,7 @@ namespace MIDI_Sessions{
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
+                sendMidiData = soundKey[e.KeyCode];
                 play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
                 play.Run(); //音の再生。
             }
@@ -133,6 +141,7 @@ namespace MIDI_Sessions{
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
                 time[2] = DateTime.Now.Minute;
+                sendMidiData = soundKey[e.KeyCode];
                 play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
                 play.Stop();    //音の停止。
             }else{
