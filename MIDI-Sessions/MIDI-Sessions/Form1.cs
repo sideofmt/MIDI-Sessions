@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Net;
 using Midi;
 using MIDI_Sessions.MIDI;
 using MIDI_Sessions.Communication;
@@ -14,12 +15,14 @@ using System.Security.Permissions;
 
 namespace MIDI_Sessions{
     public partial class Form1 : Form, BaseAdapter {
+        private const int pitch = 12;                   //ピッチ。音の高さを変更する際に使用。
+        private const int MAXPLAYER = 4;                //ユーザ数の上限。
+
         private IPlayMidi play;                         //PlayMidiのインターフェース。これを用いてMidiの再生、停止を行う。
         private Channel cha;                            //Midiのチャンネル。ユーザ毎にチャンネルが割り振られる。
         private int velocity;                           //velocity。ツマミを操作することによって値を変化させることができる。
         private Instrument inst;
         private Instrument preInst;
-        private const int pitch = 12;                   //ピッチ。音の高さを変更する際に使用。
         private Dictionary<Keys, MIDIData> soundKey;    //キーの値と出力する音を関連付けるためのDictionary。
         private Keys[] qwertyKey;                       //Keysの配列。
         private OutputDevice outputDevice;              //アウトプットデバイス。
@@ -61,6 +64,11 @@ namespace MIDI_Sessions{
             for (int i = 0; i < qwertyKey.Length; i++) {
                 soundKey.Add(qwertyKey[i], new MIDIData(cha, Pitch.C3 + i, velocity, false, inst, preInst, time));
             }
+
+            for (int i = 2; i <= MAXPLAYER;i++ ) {
+                NumberOfPerson.Items.Add(i);
+            }
+            this.NumberOfPerson.SelectedIndex = 0; 
         }
 
         /// <summary>
@@ -100,19 +108,6 @@ namespace MIDI_Sessions{
             }
             return;
         }
-
-        ///// <summary>
-        ///// 受け取ったMIDIDataを停止する。
-        ///// </summary>
-        ///// <param name="midiData"></param>
-        //private void stopMidi() {
-        //    foreach (MIDIData midi in BePlayedMidiData) {
-        //        play = new PlayMidi(midi, outputDevice);
-        //        play.Stop();
-        //    }
-
-        //    return;
-        //}
         
         /// <summary>
         /// 何らかのキーが押された時の処理
@@ -131,8 +126,6 @@ namespace MIDI_Sessions{
                 time[2] = DateTime.Now.Minute;
                 sendMidiData = soundKey[e.KeyCode];
                 BePlayedMidiData.Add(soundKey[e.KeyCode]);
-                //play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
-                //play.Run(); //音の再生。
             }
             return;
         }
@@ -154,8 +147,6 @@ namespace MIDI_Sessions{
                 time[2] = DateTime.Now.Minute;
                 sendMidiData = soundKey[e.KeyCode];
                 BePlayedMidiData.Add(soundKey[e.KeyCode]);
-                //play = new PlayMidi(soundKey[e.KeyCode], outputDevice);
-                //play.Stop();    //音の停止。
             }else{
                 /* 方向キーの左右どちらかが離された場合の処理 */
                 for (int i = 0; i < qwertyKey.Length;i++ ) {
@@ -235,6 +226,7 @@ namespace MIDI_Sessions{
                 bool exit = ApplicationExit();
                 if (exit) {
                     outputDevice.Close();   //outputDeviceをCloseする。
+                    if(udp != null)endConnection();        //Connectionを切断する。
                     this.Close();
                 }
                 return;
@@ -252,8 +244,7 @@ namespace MIDI_Sessions{
             DialogResult result = MessageBox.Show("終了しますか？",
                 "終了確認",
                 MessageBoxButtons.YesNo,
-                MessageBoxIcon.Exclamation,
-                MessageBoxDefaultButton.Button2);
+                MessageBoxIcon.Exclamation);
 
             //何が選択されたか調べる
             if (result == DialogResult.Yes) {
@@ -302,28 +293,34 @@ namespace MIDI_Sessions{
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e) {
-            IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
-            if (this.number1.Text.Length > 0 && this.number2.Text.Length > 0 && this.number3.Text.Length > 0 && this.number4.Text.Length > 0) {
-                Console.WriteLine(IPv4);
+            this.MemberList.Items.Clear();
+            if(radioServerButton.Checked){
+                // ホスト名を取得する
+                string hostname = Dns.GetHostName();
+
+                // ホスト名からIPアドレスを取得する
+                IPAddress[] adrList = Dns.GetHostAddresses(hostname);
+                foreach (IPAddress address in adrList) {
+                    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                        this.MemberList.Items.Add(address);
+                        return;
+                    }
+                }
+            }
+            else if(radioClientButton.Checked){
+                if (this.number1.Text.Length <= 0 || this.number2.Text.Length <= 0 || this.number3.Text.Length <= 0 || this.number4.Text.Length <= 0) {
+                    MessageBox.Show("IPアドレスが入力されていません。", "注意", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return; //空白の欄が一つ以上ある場合はreturnで終了。
+                }
+                IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
+            } 
+            else {
+                IPv4 = "localhost";
             }
             this.number1.Clear();
             this.number2.Clear();
             this.number3.Clear();
             this.number4.Clear();
-
-            startConnection();
-
-            return;
-        }
-
-        /// <summary>
-        /// "Connect Localhost"ボタンをクリックした際に呼び出されるメソッド。
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ConnectLocalhost_Click(object sender, EventArgs e) {
-            IPv4 = "localhost";
-            Console.WriteLine(IPv4);
 
             startConnection();
 
@@ -348,13 +345,47 @@ namespace MIDI_Sessions{
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void DisconnectButton_Click(object sender, EventArgs e) {
-            if (MessageBox.Show("通信を終了しますか？", "通信の終了", MessageBoxButtons.OKCancel) == DialogResult.Cancel) {
+            if (udp == null) {
+                MessageBox.Show("通信をしていません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            if (MessageBox.Show("通信を終了しますか？", "通信の終了", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.Cancel) {
                 // Cancelが押された時
                 return;
             }
 
             endConnection();
-            MessageBox.Show("通信を終了しました。", "通知", MessageBoxButtons.OK);
+            this.MemberList.Items.Clear();
+            MessageBox.Show("通信を終了しました。", "通知", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void radioServerButton_CheckedChanged(object sender, EventArgs e) {
+            this.number1.Enabled = false;
+            this.number2.Enabled = false;
+            this.number3.Enabled = false;
+            this.number4.Enabled = false;
+        }
+
+        private void radioClientButton_CheckedChanged(object sender, EventArgs e) {
+            this.number1.Enabled = true;
+            this.number2.Enabled = true;
+            this.number3.Enabled = true;
+            this.number4.Enabled = true;
+        }
+
+        private void radioLocalhost_CheckedChanged(object sender, EventArgs e) {
+            this.number1.Enabled = false;
+            this.number2.Enabled = false;
+            this.number3.Enabled = false;
+            this.number4.Enabled = false;
+        }
+
+        private void MemberList_SelectedIndexChanged(object sender, EventArgs e) {
+
+        }
+
+        private void NumberOfPerson_SelectedIndexChanged(object sender, EventArgs e) {
+
         }
 
         // -------------------------------------
@@ -373,14 +404,6 @@ namespace MIDI_Sessions{
             // 使用ポートの設定
             sendPort = 8000;
             recievePort = 8000;
-
-            int performedAppNum = 1;
-            //if ((performedAppNum = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName).Length) > 1) {
-            //    // 同じアプリが既に起動している場合
-            //    sendPort += (performedAppNum - 1) * 2;
-            //    recievePort += (performedAppNum - 1) * 2;
-            //    return;
-            //}
 
             // MIDIDataをnullに
             sendMidiData = null;

@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="Communication\BaseAdapter.cs" />
     <Compile Include="Communication\UdpCommunication.cs" />
+    <Compile Include="Communication\UdpServer.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

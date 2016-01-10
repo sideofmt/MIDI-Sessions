@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Net.Sockets;
 using System.Net;
 using MIDI_Sessions.MIDI;
@@ -169,10 +168,5 @@ namespace MIDI_Sessions.Communication {
             }
         }
 
-    }
-
-    public class UdpState {
-        public UdpClient u;
-        public IPEndPoint e;
     }
 }
