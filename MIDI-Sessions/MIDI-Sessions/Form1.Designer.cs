@@ -123,7 +123,6 @@
             this.MemberList.Name = "MemberList";
             this.MemberList.Size = new System.Drawing.Size(120, 88);
             this.MemberList.TabIndex = 9;
-            this.MemberList.SelectedIndexChanged += new System.EventHandler(this.MemberList_SelectedIndexChanged);
             // 
             // MemberLabel
             // 

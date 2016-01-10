@@ -30,6 +30,7 @@ namespace MIDI_Sessions{
         private List<MIDIData> BePlayedMidiData;
         private string IPv4;
         private int[] time;
+        private int person;
 
         public Form1(){
             InitializeComponent();
@@ -52,6 +53,7 @@ namespace MIDI_Sessions{
             time = new int[3];
             isConnect = false;  // 通信をしているかどうか
             BePlayedMidiData = new List<MIDIData>();
+            person = 2;
 
             /*ドの音から1オクターブ上のドの音までを、以下の配列のように割り当てる。基本的にピアノの鍵盤と同じ位置。*/
             qwertyKey = new Keys[] { Keys.A, Keys.W, Keys.S, Keys.E, Keys.D, Keys.F, Keys.T, Keys.G, Keys.Y, Keys.H, Keys.U, Keys.J, Keys.K };
@@ -68,7 +70,8 @@ namespace MIDI_Sessions{
             for (int i = 2; i <= MAXPLAYER;i++ ) {
                 NumberOfPerson.Items.Add(i);
             }
-            this.NumberOfPerson.SelectedIndex = 0; 
+            this.NumberOfPerson.SelectedIndex = 0;
+            this.NumberOfPerson.Enabled = true;
         }
 
         /// <summary>
@@ -186,10 +189,6 @@ namespace MIDI_Sessions{
             return;
         }
 
-        private void PlayMidi_Click(object sender, EventArgs e) {
-
-        }
-
         /// <summary>
         /// VelocityBarをスクロールした際に呼び出されるメソッド。
         /// </summary>
@@ -295,6 +294,17 @@ namespace MIDI_Sessions{
         private void ConnectButton_Click(object sender, EventArgs e) {
             this.MemberList.Items.Clear();
             if(radioServerButton.Checked){
+                cha = Channel.Channel1; //親となるのでチャンネルを"1"に固定する。
+
+                //全ての鍵盤に割り当てられたチャンネルを変更
+                for (int i = 0; i < qwertyKey.Length; i++) {
+                    soundKey[qwertyKey[i]].Cha = cha;
+                }
+
+                //参加人数を取得する
+                person = (int)this.NumberOfPerson.SelectedItem;
+                Console.WriteLine(person);
+
                 // ホスト名を取得する
                 string hostname = Dns.GetHostName();
 
@@ -364,6 +374,7 @@ namespace MIDI_Sessions{
             this.number2.Enabled = false;
             this.number3.Enabled = false;
             this.number4.Enabled = false;
+            this.NumberOfPerson.Enabled = true;
         }
 
         private void radioClientButton_CheckedChanged(object sender, EventArgs e) {
@@ -371,6 +382,7 @@ namespace MIDI_Sessions{
             this.number2.Enabled = true;
             this.number3.Enabled = true;
             this.number4.Enabled = true;
+            this.NumberOfPerson.Enabled = false;
         }
 
         private void radioLocalhost_CheckedChanged(object sender, EventArgs e) {
@@ -378,10 +390,7 @@ namespace MIDI_Sessions{
             this.number2.Enabled = false;
             this.number3.Enabled = false;
             this.number4.Enabled = false;
-        }
-
-        private void MemberList_SelectedIndexChanged(object sender, EventArgs e) {
-
+            this.NumberOfPerson.Enabled = false;
         }
 
         private void NumberOfPerson_SelectedIndexChanged(object sender, EventArgs e) {
