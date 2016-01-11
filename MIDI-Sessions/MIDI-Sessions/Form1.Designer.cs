@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.VelocityBar = new System.Windows.Forms.TrackBar();
             this.VelocityLabel = new System.Windows.Forms.Label();
             this.VelocityLabel2 = new System.Windows.Forms.Label();
@@ -52,6 +53,9 @@
             this.radioLocalhost = new System.Windows.Forms.RadioButton();
             this.NumberOfPerson = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.Reset = new System.Windows.Forms.Button();
+            this.ChannelBox = new System.Windows.Forms.ComboBox();
+            this.Channellabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.VelocityBar)).BeginInit();
             this.IPGroup.SuspendLayout();
             this.SuspendLayout();
@@ -123,6 +127,7 @@
             this.MemberList.Name = "MemberList";
             this.MemberList.Size = new System.Drawing.Size(120, 88);
             this.MemberList.TabIndex = 9;
+            this.MemberList.SelectedIndexChanged += new System.EventHandler(this.MemberList_SelectedIndexChanged);
             // 
             // MemberLabel
             // 
@@ -220,7 +225,7 @@
             // DisconnectButton
             // 
             this.DisconnectButton.Cursor = System.Windows.Forms.Cursors.Default;
-            this.DisconnectButton.Location = new System.Drawing.Point(265, 250);
+            this.DisconnectButton.Location = new System.Drawing.Point(265, 235);
             this.DisconnectButton.Name = "DisconnectButton";
             this.DisconnectButton.Size = new System.Drawing.Size(88, 23);
             this.DisconnectButton.TabIndex = 21;
@@ -231,7 +236,7 @@
             // timer1
             // 
             this.timer1.Enabled = true;
-            this.timer1.Interval = 20;
+            this.timer1.Interval = 10;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // radioServerButton
@@ -288,6 +293,7 @@
             // 
             // NumberOfPerson
             // 
+            this.NumberOfPerson.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.NumberOfPerson.FormattingEnabled = true;
             this.NumberOfPerson.Location = new System.Drawing.Point(379, 180);
             this.NumberOfPerson.Name = "NumberOfPerson";
@@ -304,11 +310,43 @@
             this.label2.TabIndex = 27;
             this.label2.Text = "Number Of Member";
             // 
+            // Reset
+            // 
+            this.Reset.Location = new System.Drawing.Point(265, 264);
+            this.Reset.Name = "Reset";
+            this.Reset.Size = new System.Drawing.Size(88, 23);
+            this.Reset.TabIndex = 28;
+            this.Reset.Text = "Sound Reset";
+            this.Reset.UseVisualStyleBackColor = true;
+            this.Reset.Click += new System.EventHandler(this.Reset_Click);
+            // 
+            // ChannelBox
+            // 
+            this.ChannelBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ChannelBox.FormattingEnabled = true;
+            this.ChannelBox.Location = new System.Drawing.Point(444, 28);
+            this.ChannelBox.Name = "ChannelBox";
+            this.ChannelBox.Size = new System.Drawing.Size(36, 20);
+            this.ChannelBox.TabIndex = 29;
+            this.ChannelBox.SelectedIndexChanged += new System.EventHandler(this.ChannelBox_SelectedIndexChanged);
+            // 
+            // Channellabel
+            // 
+            this.Channellabel.AutoSize = true;
+            this.Channellabel.Location = new System.Drawing.Point(392, 31);
+            this.Channellabel.Name = "Channellabel";
+            this.Channellabel.Size = new System.Drawing.Size(46, 12);
+            this.Channellabel.TabIndex = 30;
+            this.Channellabel.Text = "Channel";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(510, 340);
+            this.Controls.Add(this.Channellabel);
+            this.Controls.Add(this.ChannelBox);
+            this.Controls.Add(this.Reset);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.NumberOfPerson);
             this.Controls.Add(this.radioLocalhost);
@@ -324,6 +362,7 @@
             this.Controls.Add(this.VelocityLabel2);
             this.Controls.Add(this.VelocityLabel);
             this.Controls.Add(this.VelocityBar);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "Form1";
@@ -361,6 +400,9 @@
         private System.Windows.Forms.RadioButton radioLocalhost;
         private System.Windows.Forms.ComboBox NumberOfPerson;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button Reset;
+        private System.Windows.Forms.ComboBox ChannelBox;
+        private System.Windows.Forms.Label Channellabel;
     }
 }
 

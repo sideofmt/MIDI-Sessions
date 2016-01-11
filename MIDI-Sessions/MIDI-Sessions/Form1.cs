@@ -70,8 +70,17 @@ namespace MIDI_Sessions{
             for (int i = 2; i <= MAXPLAYER;i++ ) {
                 NumberOfPerson.Items.Add(i);
             }
+            for (int i = 0; i < MAXPLAYER; i++) {
+                this.ChannelBox.Items.Add(i + 1);
+            }
+
             this.NumberOfPerson.SelectedIndex = 0;
             this.NumberOfPerson.Enabled = true;
+            this.ChannelBox.SelectedIndex = 0;
+            this.ChannelBox.Enabled = false;
+
+            this.ConnectButton.Enabled = true;
+            this.DisconnectButton.Enabled = false;
         }
 
         /// <summary>
@@ -292,10 +301,10 @@ namespace MIDI_Sessions{
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e) {
-            this.MemberList.Items.Clear();
-            if(radioServerButton.Checked){
-                cha = Channel.Channel1; //親となるのでチャンネルを"1"に固定する。
+            IPv4 = null;
+            bool isCancel = false;  //ServerForm、ClientFormでCancelボタンが押されたかどうか
 
+            if(radioServerButton.Checked){
                 //全ての鍵盤に割り当てられたチャンネルを変更
                 for (int i = 0; i < qwertyKey.Length; i++) {
                     soundKey[qwertyKey[i]].Cha = cha;
@@ -312,25 +321,49 @@ namespace MIDI_Sessions{
                 IPAddress[] adrList = Dns.GetHostAddresses(hostname);
                 foreach (IPAddress address in adrList) {
                     if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
-                        this.MemberList.Items.Add(address);
-                        return;
+                        IPv4 = address.ToString();
+                        break;
                     }
+                }
+
+                using(ServerForm serverForm = new ServerForm(IPv4)){
+                    serverForm.ShowDialog(this);
+
+                    isCancel = serverForm.IsCancel;
                 }
             }
             else if(radioClientButton.Checked){
                 if (this.number1.Text.Length <= 0 || this.number2.Text.Length <= 0 || this.number3.Text.Length <= 0 || this.number4.Text.Length <= 0) {
                     MessageBox.Show("IPアドレスが入力されていません。", "注意", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return; //空白の欄が一つ以上ある場合はreturnで終了。
+                }else if((Channel)((int)this.ChannelBox.SelectedItem - 1) == Channel.Channel1){
+                    MessageBox.Show("クライアント側はチャンネル1を選択できません。", "注意", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return; //チャンネル1を選択している場合はreturnで終了。
                 }
                 IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
+
+                using(ClientForm clientForm = new ClientForm(IPv4)){
+                    clientForm.ShowDialog(this);
+
+                    isCancel = clientForm.IsCancel;
+                }
             } 
             else {
                 IPv4 = "localhost";
             }
+
+            if (isCancel) return;   //ServerForm、ClientFormでCancelボタンを押されたら接続せずに終了。
+
+            this.MemberList.Items.Add(IPv4);
+            Console.WriteLine("Hi");
             this.number1.Clear();
             this.number2.Clear();
             this.number3.Clear();
             this.number4.Clear();
+            this.radioServerButton.Enabled = false;
+            this.radioClientButton.Enabled = false;
+            this.radioLocalhost.Enabled = false;
+            this.ChannelBox.Enabled = false;
 
             startConnection();
 
@@ -367,6 +400,11 @@ namespace MIDI_Sessions{
             endConnection();
             this.MemberList.Items.Clear();
             MessageBox.Show("通信を終了しました。", "通知", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            this.radioServerButton.Enabled = true;
+            this.radioClientButton.Enabled = true;
+            this.radioLocalhost.Enabled = true;
+            if(!this.radioServerButton.Checked)this.ChannelBox.Enabled = true;
         }
 
         private void radioServerButton_CheckedChanged(object sender, EventArgs e) {
@@ -375,6 +413,8 @@ namespace MIDI_Sessions{
             this.number3.Enabled = false;
             this.number4.Enabled = false;
             this.NumberOfPerson.Enabled = true;
+            this.ChannelBox.SelectedIndex = 0;  //親となるのでチャンネルを"1"に固定する。
+            this.ChannelBox.Enabled = false;
         }
 
         private void radioClientButton_CheckedChanged(object sender, EventArgs e) {
@@ -383,6 +423,7 @@ namespace MIDI_Sessions{
             this.number3.Enabled = true;
             this.number4.Enabled = true;
             this.NumberOfPerson.Enabled = false;
+            this.ChannelBox.Enabled = true;
         }
 
         private void radioLocalhost_CheckedChanged(object sender, EventArgs e) {
@@ -391,10 +432,26 @@ namespace MIDI_Sessions{
             this.number3.Enabled = false;
             this.number4.Enabled = false;
             this.NumberOfPerson.Enabled = false;
+            this.ChannelBox.Enabled = true;
         }
 
         private void NumberOfPerson_SelectedIndexChanged(object sender, EventArgs e) {
+            person = (int)this.NumberOfPerson.SelectedItem;
+        }
 
+        private void Reset_Click(object sender, EventArgs e) {
+            outputDevice.Close();
+            outputDevice.Open();
+        }
+
+        /// <summary>
+        /// チャンネル選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ChannelBox_SelectedIndexChanged(object sender, EventArgs e) {
+            cha = (Channel)((int)this.ChannelBox.SelectedItem - 1);
+            Console.WriteLine(cha);
         }
 
         // -------------------------------------
@@ -423,13 +480,17 @@ namespace MIDI_Sessions{
             Console.WriteLine("通信を開始します");
             udp.open();
             isConnect = true;
-
+            this.ConnectButton.Enabled = false;
+            this.DisconnectButton.Enabled = true;
         }
 
         private void endConnection() {
             Console.WriteLine("通信を終了します");
             udp.close();
+            udp = null;
             isConnect = false;
+            this.ConnectButton.Enabled = true;
+            this.DisconnectButton.Enabled = false;
         }
 
         /// <summary>
@@ -464,6 +525,9 @@ namespace MIDI_Sessions{
             }
             // MIDIデータの演奏
             playMidi();
+        }
+
+        private void MemberList_SelectedIndexChanged(object sender, EventArgs e) {
         }
 
         //End Form1
