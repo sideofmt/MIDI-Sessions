@@ -11,7 +11,7 @@ using MIDI_Sessions.Communication;
 using MIDI_Sessions.MIDI;
 
 namespace MIDI_Sessions {
-    public partial class ServerForm : Form, BaseAdapter {
+    public partial class ServerForm : Form {
         private string IPv4;
         private List<string> memberList;
 
@@ -35,7 +35,6 @@ namespace MIDI_Sessions {
         /// <param name="e"></param>
         private void Cancel_Click(object sender, EventArgs e) {
             IsCancel = true;
-            Console.WriteLine("Cancel_Click");
             this.Close();
         }
 
@@ -57,10 +56,6 @@ namespace MIDI_Sessions {
             this.MemberList.Items.Add(address);
 
             return;
-        }
-
-        void BaseAdapter.recievedProcess(MIDI.MIDIData mididata) {
-
         }
 
         ///// <summary>

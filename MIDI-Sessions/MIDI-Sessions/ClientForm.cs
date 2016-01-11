@@ -11,7 +11,7 @@ using MIDI_Sessions.Communication;
 using MIDI_Sessions.MIDI;
 
 namespace MIDI_Sessions {
-    public partial class ClientForm : Form, BaseAdapter {
+    public partial class ClientForm : Form {
         private string IPv4;
         private List<string> memberIPv4;
 
@@ -51,10 +51,6 @@ namespace MIDI_Sessions {
         private void AddMember(string address) {
             this.MemberList.Items.Add(address);
             return;
-        }
-
-        void BaseAdapter.recievedProcess(MIDI.MIDIData mididata) {
-
         }
 
         ///// <summary>

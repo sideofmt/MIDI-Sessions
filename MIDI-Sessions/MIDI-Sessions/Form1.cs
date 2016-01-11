@@ -28,7 +28,9 @@ namespace MIDI_Sessions{
         private OutputDevice outputDevice;              //アウトプットデバイス。
         private MIDIData sendMidiData;
         private List<MIDIData> BePlayedMidiData;
-        private string IPv4;
+        private Dictionary<Keys, Label> keyLabel;
+        private string myIPv4;
+        private string servIPv4;
         private int[] time;
         private int person;
 
@@ -46,10 +48,12 @@ namespace MIDI_Sessions{
             velocity = 100;                             //velocityの初期値は100。
             inst = Instrument.AcousticGrandPiano;
             preInst = inst;
-            IPv4 = "";
+            myIPv4 = "";
+            servIPv4 = "";
             this.VelocityBar.Value = velocity;
             openDevice();                               //outputDeviceをOpenさせる。
             soundKey = new Dictionary<Keys, MIDIData>();
+            keyLabel = new Dictionary<Keys, Label>();
             time = new int[3];
             isConnect = false;  // 通信をしているかどうか
             BePlayedMidiData = new List<MIDIData>();
@@ -81,6 +85,22 @@ namespace MIDI_Sessions{
 
             this.ConnectButton.Enabled = true;
             this.DisconnectButton.Enabled = false;
+
+            this.labelOctave.Text = soundKey[qwertyKey[0]].Pit.ToString();
+
+            keyLabel.Add(qwertyKey[0], this.labelC);
+            keyLabel.Add(qwertyKey[1], this.labelCSha);
+            keyLabel.Add(qwertyKey[2], this.labelD);
+            keyLabel.Add(qwertyKey[3], this.labelDSha);
+            keyLabel.Add(qwertyKey[4], this.labelE);
+            keyLabel.Add(qwertyKey[5], this.labelF);
+            keyLabel.Add(qwertyKey[6], this.labelFSha);
+            keyLabel.Add(qwertyKey[7], this.labelG);
+            keyLabel.Add(qwertyKey[8], this.labelGSha);
+            keyLabel.Add(qwertyKey[9], this.labelA);
+            keyLabel.Add(qwertyKey[10], this.labelASha);
+            keyLabel.Add(qwertyKey[11], this.labelB);
+            keyLabel.Add(qwertyKey[12], this.labelCHigh);
         }
 
         /// <summary>
@@ -107,7 +127,6 @@ namespace MIDI_Sessions{
         private void playMidi() {
             lock (BePlayedMidiData) {
                 foreach (MIDIData midi in BePlayedMidiData) {
-                    //i++;
                     if (midi.IsPushing) {
                         play = new PlayMidi(midi, outputDevice);
                         play.Run();
@@ -131,7 +150,8 @@ namespace MIDI_Sessions{
             if(soundKey.ContainsKey(e.KeyCode)){
                 /* キーが押しっぱなし、またはPitchの値が範囲外の場合 */
                 if (soundKey[e.KeyCode].IsPushing || soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;   //そのままreturnで終了
-                
+
+                keyLabel[e.KeyCode].Visible = true;
                 soundKey[e.KeyCode].IsPushing = true;   //キーが押されている状態であることを示すIsPushingをtrueにする。
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
@@ -153,6 +173,7 @@ namespace MIDI_Sessions{
                 /* Pitchの値が範囲外の場合 */
                 if (soundKey[e.KeyCode].Pit > Pitch.G9 || soundKey[e.KeyCode].Pit < Pitch.CNeg1) return;    //そのままreturnで終了
 
+                keyLabel[e.KeyCode].Visible = false;
                 soundKey[e.KeyCode].IsPushing = false;  //キーが押されている状態であることを示すIsPushingをfalseにする。
                 time[0] = DateTime.Now.Millisecond;
                 time[1] = DateTime.Now.Second;
@@ -167,17 +188,19 @@ namespace MIDI_Sessions{
                 switch (e.KeyCode) {
                     case Keys.Right:
                         /* 右の場合 */
+                        if (soundKey[qwertyKey[qwertyKey.Length - 1]].Pit >= Pitch.G9) return;  //Pitchの上限を上回る場合はreturnで終了。
                         for (int i = 0; i < qwertyKey.Length; i++) {
-                            if (soundKey[qwertyKey[qwertyKey.Length - 1]].Pit >= Pitch.G9) return;  //Pitchの上限を上回る場合はreturnで終了。
                             soundKey[qwertyKey[i]].Pit += pitch;    //ピッチを1オクターブ高くする。
                         }
+                        this.labelOctave.Text = soundKey[qwertyKey[0]].Pit.ToString();
                         break;
                     case Keys.Left:
                         /* 左の場合 */
+                        if (soundKey[qwertyKey[0]].Pit <= Pitch.CNeg1) return;  //Pitchの下限を下回る場合はreturnで終了。
                         for (int i = 0; i < qwertyKey.Length; i++) {
-                            if (soundKey[qwertyKey[0]].Pit <= Pitch.CNeg1) return;  //Pitchの下限を下回る場合はreturnで終了。
                             soundKey[qwertyKey[i]].Pit -= pitch;    //ピッチを1オクターブ低くする。
                         }
+                        this.labelOctave.Text = soundKey[qwertyKey[0]].Pit.ToString();
                         break;
                     //case Keys.Up:
                     //    /* 上の場合 */
@@ -295,13 +318,28 @@ namespace MIDI_Sessions{
             return;
         }
 
+        private void GetOwnIPAddress() {
+            // ホスト名を取得する
+            string hostname = Dns.GetHostName();
+
+            // ホスト名からIPアドレスを取得する
+            IPAddress[] adrList = Dns.GetHostAddresses(hostname);
+            foreach (IPAddress address in adrList) {
+                if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                    myIPv4 = address.ToString();
+                    break;
+                }
+            }
+        }
+
         /// <summary>
         /// "Connect"ボタンをクリックした際に呼び出されるメソッド。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e) {
-            IPv4 = null;
+            myIPv4 = null;
+            servIPv4 = null;
             bool isCancel = false;  //ServerForm、ClientFormでCancelボタンが押されたかどうか
 
             if(radioServerButton.Checked){
@@ -314,19 +352,9 @@ namespace MIDI_Sessions{
                 person = (int)this.NumberOfPerson.SelectedItem;
                 Console.WriteLine(person);
 
-                // ホスト名を取得する
-                string hostname = Dns.GetHostName();
+                GetOwnIPAddress();
 
-                // ホスト名からIPアドレスを取得する
-                IPAddress[] adrList = Dns.GetHostAddresses(hostname);
-                foreach (IPAddress address in adrList) {
-                    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
-                        IPv4 = address.ToString();
-                        break;
-                    }
-                }
-
-                using(ServerForm serverForm = new ServerForm(IPv4)){
+                using(ServerForm serverForm = new ServerForm(myIPv4)){
                     serverForm.ShowDialog(this);
 
                     isCancel = serverForm.IsCancel;
@@ -340,21 +368,23 @@ namespace MIDI_Sessions{
                     MessageBox.Show("クライアント側はチャンネル1を選択できません。", "注意", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return; //チャンネル1を選択している場合はreturnで終了。
                 }
-                IPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
+                servIPv4 = this.number1.Text + "." + this.number2.Text + "." + this.number3.Text + "." + this.number4.Text;
 
-                using(ClientForm clientForm = new ClientForm(IPv4)){
+                GetOwnIPAddress();
+
+                using(ClientForm clientForm = new ClientForm(myIPv4)){
                     clientForm.ShowDialog(this);
 
                     isCancel = clientForm.IsCancel;
                 }
             } 
             else {
-                IPv4 = "localhost";
+                myIPv4 = "localhost";
             }
 
             if (isCancel) return;   //ServerForm、ClientFormでCancelボタンを押されたら接続せずに終了。
 
-            this.MemberList.Items.Add(IPv4);
+            this.MemberList.Items.Add(myIPv4);
             Console.WriteLine("Hi");
             this.number1.Clear();
             this.number2.Clear();
@@ -364,6 +394,10 @@ namespace MIDI_Sessions{
             this.radioClientButton.Enabled = false;
             this.radioLocalhost.Enabled = false;
             this.ChannelBox.Enabled = false;
+            this.number1.Enabled = false;
+            this.number2.Enabled = false;
+            this.number3.Enabled = false;
+            this.number4.Enabled = false;
 
             startConnection();
 
@@ -405,6 +439,12 @@ namespace MIDI_Sessions{
             this.radioClientButton.Enabled = true;
             this.radioLocalhost.Enabled = true;
             if(!this.radioServerButton.Checked)this.ChannelBox.Enabled = true;
+            if (this.radioClientButton.Checked) {
+                this.number1.Enabled = true;
+                this.number2.Enabled = true;
+                this.number3.Enabled = true;
+                this.number4.Enabled = true;
+            }
         }
 
         private void radioServerButton_CheckedChanged(object sender, EventArgs e) {
@@ -451,7 +491,6 @@ namespace MIDI_Sessions{
         /// <param name="e"></param>
         private void ChannelBox_SelectedIndexChanged(object sender, EventArgs e) {
             cha = (Channel)((int)this.ChannelBox.SelectedItem - 1);
-            Console.WriteLine(cha);
         }
 
         // -------------------------------------
@@ -474,7 +513,7 @@ namespace MIDI_Sessions{
             // MIDIDataをnullに
             sendMidiData = null;
 
-            udp = new UdpCommunication(this, IPv4, sendPort, recievePort);
+            udp = new UdpCommunication(this, servIPv4, sendPort, recievePort);
 
             // UPD通信を開始
             Console.WriteLine("通信を開始します");
@@ -526,10 +565,7 @@ namespace MIDI_Sessions{
             // MIDIデータの演奏
             playMidi();
         }
-
-        private void MemberList_SelectedIndexChanged(object sender, EventArgs e) {
-        }
-
+        
         //End Form1
     }
 }
